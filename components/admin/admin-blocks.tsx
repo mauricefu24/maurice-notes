@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type { PostStatus } from "@/types/blog";
+import type { Comment, PostStatus } from "@/types/blog";
 
 export function AdminPageTitle({ title, description }: { title: string; description: string }) {
   return (
@@ -62,6 +62,7 @@ export function AdminStatusBadge({ status }: { status: PostStatus | string }) {
     待审核: "bg-amber-50 text-amber-700",
     已通过: "bg-emerald-50 text-emerald-700",
     垃圾评论: "bg-rose-50 text-rose-700",
+    已删除: "bg-slate-100 text-slate-600",
   };
 
   return (
@@ -159,12 +160,24 @@ export function ToggleRow({ label, description, enabled }: { label: string; desc
   );
 }
 
-export function CommentActionButtons() {
+export function CommentActionButtons({
+  commentId,
+  updateStatus,
+}: {
+  commentId: string;
+  updateStatus: (id: string, status: Comment["status"]) => Promise<void>;
+}) {
   return (
     <div className="flex gap-2">
-      <Button variant="outline" size="icon" aria-label="通过"><Check className="h-4 w-4" /></Button>
-      <Button variant="outline" size="icon" aria-label="拒绝"><X className="h-4 w-4" /></Button>
-      <Button variant="outline" size="icon" aria-label="更多"><MoreHorizontal className="h-4 w-4" /></Button>
+      <form action={updateStatus.bind(null, commentId, "approved")}>
+        <Button type="submit" variant="outline" size="icon" aria-label="通过"><Check className="h-4 w-4" /></Button>
+      </form>
+      <form action={updateStatus.bind(null, commentId, "spam")}>
+        <Button type="submit" variant="outline" size="icon" aria-label="标记为垃圾"><X className="h-4 w-4" /></Button>
+      </form>
+      <form action={updateStatus.bind(null, commentId, "deleted")}>
+        <Button type="submit" variant="outline" size="icon" aria-label="删除"><MoreHorizontal className="h-4 w-4" /></Button>
+      </form>
     </div>
   );
 }

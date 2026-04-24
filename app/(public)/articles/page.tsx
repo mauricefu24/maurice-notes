@@ -2,8 +2,8 @@ import { ArticleCard } from "@/components/public/article-card";
 import { PageHeading } from "@/components/shared/page-heading";
 import { getPublishedPosts } from "@/services/blog-service";
 
-export default function ArticlesPage() {
-  const posts = getPublishedPosts();
+export default async function ArticlesPage() {
+  const posts = await getPublishedPosts();
 
   return (
     <div className="page-shell space-y-10 py-12">

@@ -9,10 +9,10 @@ import { Input } from "@/components/ui/input";
 import { archiveStats, archiveYears, popularTags } from "@/lib/public-page-data";
 import { getArchiveYears, getCategories, getPublishedPosts } from "@/services/blog-service";
 
-export default function ArchivesPage() {
-  const years = getArchiveYears();
-  const categories = getCategories();
-  const posts = getPublishedPosts();
+export default async function ArchivesPage() {
+  const years = await getArchiveYears();
+  const categories = await getCategories();
+  const posts = await getPublishedPosts();
 
   return (
     <div className="page-shell space-y-8 py-8">

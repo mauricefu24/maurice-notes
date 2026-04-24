@@ -14,9 +14,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { homeCategories } from "@/lib/homepage-data";
 import { getFeaturedPosts, getPublishedPosts } from "@/services/blog-service";
 
-export default function HomePage() {
-  const featuredArticles = getFeaturedPosts();
-  const latestArticles = getPublishedPosts().slice(0, 4);
+export default async function HomePage() {
+  const featuredArticles = await getFeaturedPosts();
+  const latestArticles = (await getPublishedPosts()).slice(0, 4);
 
   return (
     <div className="bg-white">

@@ -14,6 +14,8 @@ export function getCommentStatusLabel(status: Comment["status"]) {
   const labels: Record<Comment["status"], string> = {
     pending: "待审核",
     approved: "已通过",
+    spam: "垃圾评论",
+    deleted: "已删除",
   };
 
   return labels[status];

@@ -166,3 +166,19 @@ export const comments: Comment[] = [
     createdAt: "2024-04-20",
   },
 ];
+
+export const siteSettings = {
+  siteName: "Maurice Notes",
+  siteDescription: "记录技术与产品的思考，分享设计与生活的灵感。保持好奇，持续创造。",
+  siteDomain: "https://mauricenotes.com",
+  timezone: "(GMT+08:00) 北京，上海，香港特别行政区",
+  language: "简体中文",
+  footerDescription: "记录技术与产品的思考，分享设计与生活的灵感。",
+  icp: "粤ICP备 2024001234号-1",
+  copyright: "© 2024 Maurice Notes. All rights reserved.",
+  email: "hello@mauricenotes.com",
+  github: "https://github.com/maurice",
+  twitter: "https://twitter.com/maurice",
+  linkedin: "https://linkedin.com/in/maurice",
+  wechat: "MauriceNotes",
+};

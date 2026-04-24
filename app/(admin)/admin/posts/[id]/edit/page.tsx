@@ -1,5 +1,6 @@
 import { PostEditorScreen } from "@/components/admin/post-editor-screen";
-import { getAllPosts } from "@/services/blog-service";
+import { updatePost } from "@/app/(admin)/admin/posts/actions";
+import { getPostById } from "@/services/blog-service";
 import { notFound } from "next/navigation";
 
 type EditPostPageProps = {
@@ -8,11 +9,11 @@ type EditPostPageProps = {
 
 export default async function EditPostPage({ params }: EditPostPageProps) {
   const { id } = await params;
-  const post = getAllPosts().find((item) => item.id === id);
+  const post = await getPostById(id);
 
   if (!post) {
     notFound();
   }
 
-  return <PostEditorScreen mode="edit" post={post} />;
+  return <PostEditorScreen action={updatePost.bind(null, id)} mode="edit" post={post} />;
 }

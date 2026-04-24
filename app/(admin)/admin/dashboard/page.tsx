@@ -9,9 +9,9 @@ import { adminTasks, categoryDistribution, dashboardMetrics, quickActions, traff
 import { getCommentStatusLabel, getPostStatusLabel } from "@/lib/status-labels";
 import { getAllPosts, getComments } from "@/services/blog-service";
 
-export default function AdminDashboardPage() {
-  const posts = getAllPosts();
-  const comments = getComments();
+export default async function AdminDashboardPage() {
+  const posts = await getAllPosts();
+  const comments = await getComments();
 
   return (
     <div className="space-y-8">

@@ -1,31 +1,284 @@
-import { categories, comments, posts } from "@/lib/mock-data";
+import { categories, comments, posts, siteSettings } from "@/lib/mock-data";
+import { prisma } from "@/lib/prisma";
+import type { Category, Comment, Post, SiteSettings } from "@/types/blog";
 
-export function getFeaturedPosts() {
-  return posts.filter((post) => post.featured);
+type DbPost = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  status: string;
+  author: string;
+  publishedAt: Date;
+  readingTime: string;
+  views: string;
+  comments: number;
+  image: string;
+  featured: boolean;
+};
+
+type DbCategory = {
+  slug: string;
+  name: string;
+  description: string;
+  accent: string;
+};
+
+type DbComment = {
+  id: string;
+  author: string;
+  avatar: string | null;
+  postTitle: string;
+  body: string;
+  status: string;
+  flagged: boolean;
+  createdAt: Date;
+};
+
+function toPost(post: DbPost): Post {
+  return {
+    id: post.id,
+    slug: post.slug,
+    title: post.title,
+    excerpt: post.excerpt,
+    content: post.content,
+    category: post.category,
+    status: post.status === "published" || post.status === "review" ? post.status : "draft",
+    author: post.author,
+    publishedAt: post.publishedAt.toISOString().slice(0, 10),
+    readingTime: post.readingTime,
+    views: post.views,
+    comments: post.comments,
+    image: post.image,
+    featured: post.featured,
+  };
 }
 
-export function getPublishedPosts() {
-  return posts.filter((post) => post.status === "published");
+function toCategory(category: DbCategory, postCount: number): Category {
+  return {
+    slug: category.slug,
+    name: category.name,
+    description: category.description,
+    accent: category.accent,
+    postCount,
+  };
 }
 
-export function getAllPosts() {
-  return posts;
+function toComment(comment: DbComment): Comment {
+  return {
+    id: comment.id,
+    author: comment.author,
+    avatar: comment.avatar ?? undefined,
+    postTitle: comment.postTitle,
+    body: comment.body,
+    status:
+      comment.status === "approved" || comment.status === "spam" || comment.status === "deleted"
+        ? comment.status
+        : "pending",
+    flagged: comment.flagged,
+    createdAt: comment.createdAt.toISOString().slice(0, 10),
+  };
 }
 
-export function getPostBySlug(slug: string) {
-  return posts.find((post) => post.slug === slug);
+function parseDate(value: string) {
+  return new Date(`${value}T00:00:00.000Z`);
 }
 
-export function getCategories() {
-  return categories;
+async function seedPostsIfEmpty() {
+  const count = await prisma.post.count();
+
+  if (count > 0) {
+    return;
+  }
+
+  await prisma.post.createMany({
+    data: posts.map((post) => ({
+      id: post.id,
+      slug: post.slug,
+      title: post.title,
+      excerpt: post.excerpt,
+      content: post.content ?? post.excerpt,
+      category: post.category,
+      status: post.status,
+      author: post.author,
+      publishedAt: parseDate(post.publishedAt),
+      readingTime: post.readingTime,
+      views: post.views,
+      comments: post.comments,
+      image: post.image,
+      featured: post.featured ?? false,
+    })),
+  });
 }
 
-export function getComments() {
-  return comments;
+async function seedCategoriesIfEmpty() {
+  const count = await prisma.category.count();
+
+  if (count > 0) {
+    return;
+  }
+
+  await prisma.category.createMany({
+    data: categories.map((category, index) => ({
+      slug: category.slug,
+      name: category.name,
+      description: category.description,
+      accent: category.accent,
+      sortOrder: index,
+    })),
+  });
 }
 
-export function getArchiveYears() {
-  const publishedPosts = getPublishedPosts();
+async function seedCommentsIfEmpty() {
+  const count = await prisma.comment.count();
+
+  if (count > 0) {
+    return;
+  }
+
+  await prisma.comment.createMany({
+    data: comments.map((comment, index) => ({
+      id: comment.id,
+      author: comment.author,
+      postTitle: comment.postTitle,
+      body: comment.body,
+      status: comment.status,
+      flagged: false,
+      createdAt: index < 2 ? new Date() : parseDate("2024-04-20"),
+    })),
+  });
+}
+
+async function seedSettingsIfEmpty() {
+  const setting = await prisma.siteSetting.findUnique({ where: { key: "site" } });
+
+  if (setting) {
+    return;
+  }
+
+  await prisma.siteSetting.create({
+    data: {
+      key: "site",
+      value: siteSettings,
+    },
+  });
+}
+
+async function ensureSeedData() {
+  await seedPostsIfEmpty();
+  await seedCategoriesIfEmpty();
+  await seedCommentsIfEmpty();
+  await seedSettingsIfEmpty();
+}
+
+async function withMockFallback<T>(query: () => Promise<T>, fallback: T) {
+  try {
+    await ensureSeedData();
+    return await query();
+  } catch (error) {
+    console.warn("Falling back to mock blog data:", error);
+    return fallback;
+  }
+}
+
+export async function getFeaturedPosts() {
+  return withMockFallback(
+    async () => {
+      const dbPosts = await prisma.post.findMany({
+        where: { featured: true, status: "published" },
+        orderBy: { publishedAt: "desc" },
+      });
+      return dbPosts.map(toPost);
+    },
+    posts.filter((post) => post.featured && post.status === "published"),
+  );
+}
+
+export async function getPublishedPosts() {
+  return withMockFallback(
+    async () => {
+      const dbPosts = await prisma.post.findMany({
+        where: { status: "published" },
+        orderBy: { publishedAt: "desc" },
+      });
+      return dbPosts.map(toPost);
+    },
+    posts.filter((post) => post.status === "published"),
+  );
+}
+
+export async function getAllPosts() {
+  return withMockFallback(
+    async () => {
+      const dbPosts = await prisma.post.findMany({ orderBy: { updatedAt: "desc" } });
+      return dbPosts.map(toPost);
+    },
+    posts,
+  );
+}
+
+export async function getPostBySlug(slug: string) {
+  return withMockFallback(
+    async () => {
+      const post = await prisma.post.findUnique({ where: { slug } });
+      return post ? toPost(post) : undefined;
+    },
+    posts.find((post) => post.slug === slug),
+  );
+}
+
+export async function getPostById(id: string) {
+  return withMockFallback(
+    async () => {
+      const post = await prisma.post.findUnique({ where: { id } });
+      return post ? toPost(post) : undefined;
+    },
+    posts.find((post) => post.id === id),
+  );
+}
+
+export async function getCategories() {
+  return withMockFallback(
+    async () => {
+      const [dbCategories, dbPosts] = await Promise.all([
+        prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
+        prisma.post.groupBy({
+          by: ["category"],
+          _count: { category: true },
+        }),
+      ]);
+      const postCountByCategory = new Map(dbPosts.map((item) => [item.category, item._count.category]));
+
+      return dbCategories.map((category) => toCategory(category, postCountByCategory.get(category.name) ?? 0));
+    },
+    categories,
+  );
+}
+
+export async function getComments() {
+  return withMockFallback(
+    async () => {
+      const dbComments = await prisma.comment.findMany({ orderBy: { createdAt: "desc" } });
+      return dbComments.map(toComment);
+    },
+    comments,
+  );
+}
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  return withMockFallback(
+    async () => {
+      const setting = await prisma.siteSetting.findUnique({ where: { key: "site" } });
+      return (setting?.value as SiteSettings | undefined) ?? siteSettings;
+    },
+    siteSettings,
+  );
+}
+
+export async function getArchiveYears() {
+  const publishedPosts = await getPublishedPosts();
 
   return [
     {

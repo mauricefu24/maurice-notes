@@ -1,5 +1,6 @@
 import { PostEditorScreen } from "@/components/admin/post-editor-screen";
+import { createPost } from "@/app/(admin)/admin/posts/actions";
 
 export default function NewPostPage() {
-  return <PostEditorScreen mode="new" />;
+  return <PostEditorScreen action={createPost} mode="new" />;
 }

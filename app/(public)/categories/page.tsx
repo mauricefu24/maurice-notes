@@ -9,9 +9,9 @@ import { categoryTabs, popularTags, recommendedAuthors } from "@/lib/public-page
 import { getCategories, getPublishedPosts } from "@/services/blog-service";
 import { NewsletterSignup } from "@/components/public/newsletter-signup";
 
-export default function CategoriesPage() {
-  const categories = getCategories();
-  const posts = getPublishedPosts();
+export default async function CategoriesPage() {
+  const categories = await getCategories();
+  const posts = await getPublishedPosts();
   const featuredCategory = categories[1];
 
   return (

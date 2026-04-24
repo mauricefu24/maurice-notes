@@ -17,8 +17,8 @@ type ArticleDetailPageProps = {
 
 export default async function ArticleDetailPage({ params }: ArticleDetailPageProps) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
-  const related = getPublishedPosts().filter((item) => item.slug !== slug).slice(0, 3);
+  const post = await getPostBySlug(slug);
+  const related = (await getPublishedPosts()).filter((item) => item.slug !== slug).slice(0, 3);
 
   if (!post || post.status !== "published") {
     notFound();

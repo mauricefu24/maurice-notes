@@ -38,7 +38,7 @@ export const quickActions = [
   { label: "新建文章", icon: FileText, href: "/admin/posts/new" },
   { label: "新建页面", icon: BookOpen, href: "/admin/posts/new" },
   { label: "上传媒体", icon: ImageIcon, href: "/admin/settings" },
-  { label: "管理分类", icon: Tags, href: "/categories" },
+  { label: "管理分类", icon: Tags, href: "/admin/categories" },
   { label: "查看评论", icon: MessageSquare, href: "/admin/comments" },
   { label: "数据分析", icon: BarChart3, href: "/admin/dashboard" },
 ];
@@ -137,6 +137,7 @@ export const editorCategories = [
 export const sidebarNav = [
   { href: "/admin/dashboard", label: "仪表盘", icon: Settings },
   { href: "/admin/posts", label: "文章管理", icon: FileText },
+  { href: "/admin/categories", label: "分类管理", icon: Tags },
   { href: "/admin/comments", label: "评论管理", icon: MessageSquare },
   { href: "/admin/settings", label: "设置", icon: Settings },
 ];

@@ -28,8 +28,26 @@ export type Post = {
 export type Comment = {
   id: string;
   author: string;
+  avatar?: string;
   postTitle: string;
   body: string;
-  status: "pending" | "approved";
+  status: "pending" | "approved" | "spam" | "deleted";
+  flagged?: boolean;
   createdAt: string;
+};
+
+export type SiteSettings = {
+  siteName: string;
+  siteDescription: string;
+  siteDomain: string;
+  timezone: string;
+  language: string;
+  footerDescription: string;
+  icp: string;
+  copyright: string;
+  email: string;
+  github: string;
+  twitter: string;
+  linkedin: string;
+  wechat: string;
 };

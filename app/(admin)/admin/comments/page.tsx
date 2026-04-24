@@ -5,9 +5,14 @@ import { AdminCard, AdminFilterBar, AdminPageTitle, AdminSearchInput, AdminStatu
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { commentOverview, commentsQueue } from "@/lib/admin-data";
+import { updateCommentStatus } from "@/app/(admin)/admin/comments/actions";
+import { commentOverview } from "@/lib/admin-data";
+import { getCommentStatusLabel } from "@/lib/status-labels";
+import { getComments } from "@/services/blog-service";
 
-export default function AdminCommentsPage() {
+export default async function AdminCommentsPage() {
+  const comments = await getComments();
+
   return (
     <div className="space-y-8">
       <AdminPageTitle title="评论管理" description="管理和审核网站上的评论，确保内容质量与社区友好。" />
@@ -53,7 +58,7 @@ export default function AdminCommentsPage() {
             </div>
 
             <div className="divide-y divide-slate-100">
-              {commentsQueue.map((comment) => (
+              {comments.map((comment) => (
                 <div key={comment.id} className={comment.flagged ? "bg-rose-50/40 px-3 py-5" : "px-3 py-5"}>
                   <div className="grid gap-4 md:grid-cols-[24px_48px_1fr_auto]">
                     <input type="checkbox" aria-label={`选择 ${comment.author} 的评论`} className="mt-3" />
@@ -67,23 +72,23 @@ export default function AdminCommentsPage() {
                     <div className="min-w-0 space-y-2">
                       <div className="flex flex-wrap items-center gap-3">
                         <p className="font-semibold text-note-ink">{comment.author}</p>
-                        <span className="text-sm text-muted-foreground">{comment.time}</span>
-                        <AdminStatusBadge status={comment.status} />
+                        <span className="text-sm text-muted-foreground">{comment.createdAt}</span>
+                        <AdminStatusBadge status={getCommentStatusLabel(comment.status)} />
                         {comment.flagged ? (
                           <span className="rounded-md bg-rose-100 px-2 py-1 text-xs text-rose-700">疑似垃圾内容</span>
                         ) : null}
                       </div>
                       <p className="max-w-3xl text-sm leading-7 text-slate-600">{comment.body}</p>
-                      <p className="text-sm text-muted-foreground">评论于：《{comment.post}》</p>
+                      <p className="text-sm text-muted-foreground">评论于：《{comment.postTitle}》</p>
                     </div>
-                    <CommentActionButtons />
+                    <CommentActionButtons commentId={comment.id} updateStatus={updateCommentStatus} />
                   </div>
                 </div>
               ))}
             </div>
 
             <div className="flex items-center justify-between border-t pt-4 text-sm text-muted-foreground">
-              <span>共 1,245 条评论</span>
+              <span>共 {comments.length} 条评论</span>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm">上一页</Button>
                 <Button size="sm">1</Button>

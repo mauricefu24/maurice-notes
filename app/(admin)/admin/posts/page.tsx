@@ -10,8 +10,8 @@ import { adminMetrics, contentHealth } from "@/lib/admin-data";
 import { getPostStatusLabel } from "@/lib/status-labels";
 import { getAllPosts } from "@/services/blog-service";
 
-export default function AdminPostsPage() {
-  const posts = getAllPosts();
+export default async function AdminPostsPage() {
+  const posts = await getAllPosts();
 
   return (
     <div className="space-y-8">
@@ -169,8 +169,8 @@ export default function AdminPostsPage() {
           <SidePanel title="快速操作">
             <div className="space-y-3">
               <QuickActionRow label="新建文章" icon={Plus} href="/admin/posts/new" />
-              <QuickActionRow label="文章分类" icon={Tags} href="/categories" />
-              <QuickActionRow label="标签管理" icon={Tags} href="/categories" />
+              <QuickActionRow label="文章分类" icon={Tags} href="/admin/categories" />
+              <QuickActionRow label="标签管理" icon={Tags} href="/admin/categories" />
               <QuickActionRow label="草稿箱" icon={Edit3} href="/admin/posts" />
               <QuickActionRow label="回收站" icon={Trash2} href="/admin/posts" />
             </div>
