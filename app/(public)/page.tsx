@@ -11,9 +11,13 @@ import { NewsletterCard } from "@/components/public/home/newsletter-card";
 import { SectionHeading } from "@/components/public/home/section-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { featuredArticles, homeCategories, latestArticles } from "@/lib/homepage-data";
+import { homeCategories } from "@/lib/homepage-data";
+import { getFeaturedPosts, getPublishedPosts } from "@/services/blog-service";
 
 export default function HomePage() {
+  const featuredArticles = getFeaturedPosts();
+  const latestArticles = getPublishedPosts().slice(0, 4);
+
   return (
     <div className="bg-white">
       <section className="page-shell grid gap-10 pb-12 pt-8 lg:grid-cols-[0.76fr_1fr] lg:items-center">

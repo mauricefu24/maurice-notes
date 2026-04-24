@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { categoryTabs, popularTags, recommendedAuthors } from "@/lib/public-page-data";
 import { getCategories, getPublishedPosts } from "@/services/blog-service";
+import { NewsletterSignup } from "@/components/public/newsletter-signup";
 
 export default function CategoriesPage() {
   const categories = getCategories();
@@ -118,7 +119,7 @@ export default function CategoriesPage() {
           <SidebarPanel title="订阅精选内容">
             <div className="space-y-4">
               <p className="text-sm leading-6 text-muted-foreground">每周一封精选内容，发现和灵感不错过任何更新。</p>
-              <Button className="w-full">立即订阅</Button>
+              <NewsletterSignup />
             </div>
           </SidebarPanel>
         </aside>

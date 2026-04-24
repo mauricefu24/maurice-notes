@@ -35,12 +35,12 @@ export const categoryDistribution = [
 ];
 
 export const quickActions = [
-  { label: "新建文章", icon: FileText },
-  { label: "新建页面", icon: BookOpen },
-  { label: "上传媒体", icon: ImageIcon },
-  { label: "管理分类", icon: Tags },
-  { label: "查看评论", icon: MessageSquare },
-  { label: "数据分析", icon: BarChart3 },
+  { label: "新建文章", icon: FileText, href: "/admin/posts/new" },
+  { label: "新建页面", icon: BookOpen, href: "/admin/posts/new" },
+  { label: "上传媒体", icon: ImageIcon, href: "/admin/settings" },
+  { label: "管理分类", icon: Tags, href: "/categories" },
+  { label: "查看评论", icon: MessageSquare, href: "/admin/comments" },
+  { label: "数据分析", icon: BarChart3, href: "/admin/dashboard" },
 ];
 
 export const adminTasks = [

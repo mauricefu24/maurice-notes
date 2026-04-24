@@ -1,12 +1,13 @@
-import { Bookmark, Calendar, Clock, Eye, Heart, Share2, ThumbsUp } from "lucide-react";
+import { Calendar, Clock, Eye, Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ArticleActions } from "@/components/public/article-actions";
+import { CommentComposer } from "@/components/public/comment-composer";
 import { BlockHeading, MiniArticleCard, SidebarPanel, SurfaceCard, TagPill } from "@/components/public/page-blocks";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { codeSample, articleComments, tableOfContents } from "@/lib/public-page-data";
 import { getPublishedPosts, getPostBySlug } from "@/services/blog-service";
 
@@ -19,7 +20,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
   const post = getPostBySlug(slug);
   const related = getPublishedPosts().filter((item) => item.slug !== slug).slice(0, 3);
 
-  if (!post) {
+  if (!post || post.status !== "published") {
     notFound();
   }
 
@@ -68,11 +69,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
                 {post.views} 阅读
               </span>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Button variant="outline" className="gap-2"><ThumbsUp className="h-4 w-4" />赞 128</Button>
-              <Button variant="outline" className="gap-2"><Bookmark className="h-4 w-4" />收藏</Button>
-              <Button variant="outline" className="gap-2"><Share2 className="h-4 w-4" />分享</Button>
-            </div>
+            <ArticleActions title={post.title} />
           </section>
 
           <div className="relative h-[420px] overflow-hidden rounded-lg border border-slate-200">
@@ -125,10 +122,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
             <BlockHeading title={`评论（${articleComments.length}）`} />
             <SurfaceCard>
               <CardContent className="space-y-5 p-5">
-                <div className="flex gap-3">
-                  <Input placeholder="写下你的评论..." className="h-11" />
-                  <Button className="h-11 px-6">发表评论</Button>
-                </div>
+                <CommentComposer />
                 <div className="space-y-4">
                   {articleComments.map((comment) => (
                     <div key={comment.name} className="flex gap-3 border-t pt-4">
@@ -196,7 +190,9 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
                 </div>
               </div>
               <p className="text-sm leading-6 text-muted-foreground">关注技术、产品与设计的结合，持续探索更好的解决方案。</p>
-              <Button className="w-full">关注我</Button>
+              <Button asChild className="w-full">
+                <Link href="/about">关注我</Link>
+              </Button>
             </div>
           </SidebarPanel>
         </aside>

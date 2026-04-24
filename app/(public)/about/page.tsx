@@ -40,9 +40,11 @@ export default function AboutPage() {
             <Button asChild size="lg" className="gap-2">
               <Link href="/articles">查看我的文章 <ArrowRight className="h-4 w-4" /></Link>
             </Button>
-            <Button variant="outline" size="lg" className="gap-2">
-              <ArrowDownToLine className="h-4 w-4" />
-              下载我的简历
+            <Button asChild variant="outline" size="lg" className="gap-2">
+              <Link href="mailto:hello@mauricenotes.com">
+                <ArrowDownToLine className="h-4 w-4" />
+                联系我
+              </Link>
             </Button>
           </div>
         </div>

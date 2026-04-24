@@ -168,11 +168,11 @@ export default function AdminPostsPage() {
 
           <SidePanel title="快速操作">
             <div className="space-y-3">
-              <QuickActionRow label="新建文章" icon={Plus} />
-              <QuickActionRow label="文章分类" icon={Tags} />
-              <QuickActionRow label="标签管理" icon={Tags} />
-              <QuickActionRow label="草稿箱" icon={Edit3} />
-              <QuickActionRow label="回收站" icon={Trash2} />
+              <QuickActionRow label="新建文章" icon={Plus} href="/admin/posts/new" />
+              <QuickActionRow label="文章分类" icon={Tags} href="/categories" />
+              <QuickActionRow label="标签管理" icon={Tags} href="/categories" />
+              <QuickActionRow label="草稿箱" icon={Edit3} href="/admin/posts" />
+              <QuickActionRow label="回收站" icon={Trash2} href="/admin/posts" />
             </div>
           </SidePanel>
         </aside>

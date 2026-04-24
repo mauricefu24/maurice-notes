@@ -102,14 +102,30 @@ export function SidePanel({ title, children }: { title: string; children: React.
   );
 }
 
-export function QuickActionRow({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
-  return (
-    <button className="flex w-full items-center justify-between rounded-lg border border-slate-200 px-4 py-3 text-left text-sm transition hover:bg-note-mint hover:text-note-teal">
+export function QuickActionRow({ icon: Icon, label, href }: { icon: LucideIcon; label: string; href?: string }) {
+  const className =
+    "flex w-full items-center justify-between rounded-lg border border-slate-200 px-4 py-3 text-left text-sm transition hover:bg-note-mint hover:text-note-teal";
+  const content = (
+    <>
       <span className="inline-flex items-center gap-3">
         <Icon className="h-4 w-4" />
         {label}
       </span>
       <ChevronRight className="h-4 w-4" />
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" className={className}>
+      {content}
     </button>
   );
 }

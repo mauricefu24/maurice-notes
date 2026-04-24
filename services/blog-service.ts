@@ -25,12 +25,14 @@ export function getComments() {
 }
 
 export function getArchiveYears() {
+  const publishedPosts = getPublishedPosts();
+
   return [
     {
       year: "2024",
       months: [
-        { month: "5 月", posts: posts.filter((post) => post.publishedAt.startsWith("2024-05")) },
-        { month: "4 月", posts: posts.filter((post) => post.publishedAt.startsWith("2024-04")) },
+        { month: "5 月", posts: publishedPosts.filter((post) => post.publishedAt.startsWith("2024-05")) },
+        { month: "4 月", posts: publishedPosts.filter((post) => post.publishedAt.startsWith("2024-04")) },
       ],
     },
   ];

@@ -1,8 +1,7 @@
 import { Mail } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { NewsletterSignup } from "@/components/public/newsletter-signup";
 
 export function NewsletterCard() {
   return (
@@ -15,10 +14,7 @@ export function NewsletterCard() {
           </div>
           <p className="text-sm leading-6 text-muted-foreground">每周一封邮件，分享我的思考、发现与工具。</p>
         </div>
-        <div className="space-y-3">
-          <Input placeholder="输入你的邮箱地址" className="h-11" />
-          <Button className="h-11 w-full">立即订阅</Button>
-        </div>
+        <NewsletterSignup />
         <p className="text-xs leading-5 text-muted-foreground">我尊重你的隐私，随时可以取消订阅。</p>
       </CardContent>
     </Card>
