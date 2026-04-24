@@ -1,17 +1,36 @@
-import { Circle } from "lucide-react";
+import { Circle, Eye, FileCheck2, FileText, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { AdminCard, AdminPageTitle, AdminStatCard, QuickActionRow, SidePanel } from "@/components/admin/admin-blocks";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { adminTasks, categoryDistribution, dashboardMetrics, quickActions, trafficData } from "@/lib/admin-data";
+import { quickActions, trafficData } from "@/lib/admin-data";
 import { getCommentStatusLabel, getPostStatusLabel } from "@/lib/status-labels";
-import { getAllPosts, getComments } from "@/services/blog-service";
+import { getAllPosts, getBlogStats, getCategories, getComments } from "@/services/blog-service";
 
 export default async function AdminDashboardPage() {
   const posts = await getAllPosts();
   const comments = await getComments();
+  const categories = await getCategories();
+  const stats = await getBlogStats();
+  const dashboardMetrics = [
+    { label: "总文章数", value: `${stats.totalPosts}`, delta: "实时数据", icon: FileText, tone: "bg-teal-50 text-teal-700" },
+    { label: "已发布", value: `${stats.publishedPosts}`, delta: "实时数据", icon: FileCheck2, tone: "bg-emerald-50 text-emerald-700" },
+    { label: "总浏览量", value: stats.totalViewsLabel, delta: "文章累计", icon: Eye, tone: "bg-blue-50 text-blue-700" },
+    { label: "评论数", value: `${stats.totalComments}`, delta: `${stats.pendingComments} 待审核`, icon: MessageSquare, tone: "bg-orange-50 text-orange-700" },
+  ];
+  const categoryDistribution = categories.map((category, index) => ({
+    label: category.name,
+    value: category.postCount,
+    percent: stats.totalPosts ? `${((category.postCount / stats.totalPosts) * 100).toFixed(1)}%` : "0%",
+    color: ["bg-note-teal", "bg-blue-500", "bg-orange-400", "bg-amber-500", "bg-violet-500"][index % 5],
+  }));
+  const tasks = [
+    { title: `审核 ${stats.pendingComments} 条待审评论`, due: `${stats.pendingComments}`, status: "待处理" },
+    { title: `处理 ${stats.reviewPosts} 篇审核中文章`, due: `${stats.reviewPosts}`, status: "进行中" },
+    { title: `维护 ${stats.totalCategories} 个内容分类`, due: `${stats.totalCategories}`, status: "计划中" },
+  ];
 
   return (
     <div className="space-y-8">
@@ -60,7 +79,7 @@ export default async function AdminDashboardPage() {
           <CardContent className="grid gap-6 p-5 pt-0 md:grid-cols-[160px_1fr] xl:grid-cols-1">
             <div className="mx-auto grid h-40 w-40 place-items-center rounded-full border-[28px] border-note-teal bg-white text-center">
               <div>
-                <p className="text-3xl font-semibold text-note-ink">128</p>
+                <p className="text-3xl font-semibold text-note-ink">{stats.totalPosts}</p>
                 <p className="text-xs text-muted-foreground">总文章</p>
               </div>
             </div>
@@ -154,7 +173,7 @@ export default async function AdminDashboardPage() {
             <CardTitle className="text-lg tracking-normal">待办任务</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 p-5 pt-0">
-            {adminTasks.map((task) => (
+            {tasks.map((task) => (
               <div key={task.title} className="flex gap-3">
                 <Circle className="mt-1 h-4 w-4 text-muted-foreground" />
                 <div className="min-w-0 flex-1">

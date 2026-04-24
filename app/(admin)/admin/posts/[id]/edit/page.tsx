@@ -1,5 +1,5 @@
 import { PostEditorScreen } from "@/components/admin/post-editor-screen";
-import { updatePost } from "@/app/(admin)/admin/posts/actions";
+import { publishPost, savePostDraft, updatePost } from "@/app/(admin)/admin/posts/actions";
 import { getPostById } from "@/services/blog-service";
 import { notFound } from "next/navigation";
 
@@ -15,5 +15,13 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
     notFound();
   }
 
-  return <PostEditorScreen action={updatePost.bind(null, id)} mode="edit" post={post} />;
+  return (
+    <PostEditorScreen
+      action={updatePost.bind(null, id)}
+      draftAction={savePostDraft.bind(null, id)}
+      publishAction={publishPost.bind(null, id)}
+      mode="edit"
+      post={post}
+    />
+  );
 }

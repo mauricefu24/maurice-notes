@@ -21,13 +21,13 @@ function slugify(input: string) {
     .slice(0, 80);
 }
 
-function postPayload(formData: FormData) {
+function postPayload(formData: FormData, forcedStatus?: "published" | "draft" | "review") {
   const title = value(formData, "title");
   const excerpt = value(formData, "excerpt");
   const content = value(formData, "content");
   const rawSlug = value(formData, "slug");
   const slug = slugify(rawSlug || title);
-  const status = value(formData, "status") || "draft";
+  const status = forcedStatus ?? value(formData, "status") ?? "draft";
 
   if (!title) {
     throw new Error("文章标题不能为空");
@@ -70,6 +70,25 @@ export async function createPost(formData: FormData) {
   redirect(`/admin/posts/${post.id}/edit`);
 }
 
+export async function createDraftPost(formData: FormData) {
+  const post = await prisma.post.create({
+    data: postPayload(formData, "draft"),
+  });
+
+  revalidateBlog();
+  redirect(`/admin/posts/${post.id}/edit`);
+}
+
+export async function createPublishedPost(formData: FormData) {
+  const post = await prisma.post.create({
+    data: postPayload(formData, "published"),
+  });
+
+  revalidateBlog();
+  revalidatePath(`/articles/${post.slug}`);
+  redirect(`/admin/posts/${post.id}/edit`);
+}
+
 export async function updatePost(id: string, formData: FormData) {
   const post = await prisma.post.update({
     where: { id },
@@ -79,4 +98,46 @@ export async function updatePost(id: string, formData: FormData) {
   revalidateBlog();
   revalidatePath(`/articles/${post.slug}`);
   redirect(`/admin/posts/${post.id}/edit`);
+}
+
+export async function savePostDraft(id: string, formData: FormData) {
+  const post = await prisma.post.update({
+    where: { id },
+    data: postPayload(formData, "draft"),
+  });
+
+  revalidateBlog();
+  revalidatePath(`/articles/${post.slug}`);
+  redirect(`/admin/posts/${post.id}/edit`);
+}
+
+export async function publishPost(id: string, formData: FormData) {
+  const post = await prisma.post.update({
+    where: { id },
+    data: postPayload(formData, "published"),
+  });
+
+  revalidateBlog();
+  revalidatePath(`/articles/${post.slug}`);
+  redirect(`/admin/posts/${post.id}/edit`);
+}
+
+export async function updatePostStatus(id: string, status: "published" | "draft" | "review") {
+  const post = await prisma.post.update({
+    where: { id },
+    data: { status },
+  });
+
+  revalidateBlog();
+  revalidatePath(`/articles/${post.slug}`);
+}
+
+export async function deletePost(id: string) {
+  const post = await prisma.post.delete({
+    where: { id },
+    select: { slug: true },
+  });
+
+  revalidateBlog();
+  revalidatePath(`/articles/${post.slug}`);
 }

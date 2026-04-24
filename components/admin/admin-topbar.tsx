@@ -14,7 +14,7 @@ export function AdminTopbar() {
           <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-muted-foreground">⌘K</span>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" aria-label="通知">
+          <Button variant="ghost" size="icon" aria-label="通知" disabled>
             <Bell className="h-4 w-4" />
           </Button>
           <Avatar>

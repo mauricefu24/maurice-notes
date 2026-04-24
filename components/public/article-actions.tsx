@@ -11,7 +11,7 @@ type ArticleActionsProps = {
   initialLikes?: number;
 };
 
-export function ArticleActions({ title, initialLikes = 128 }: ArticleActionsProps) {
+export function ArticleActions({ title, initialLikes = 0 }: ArticleActionsProps) {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [copied, setCopied] = useState(false);

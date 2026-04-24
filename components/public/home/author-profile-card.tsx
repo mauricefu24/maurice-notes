@@ -2,10 +2,13 @@ import { MapPin } from "lucide-react";
 import Image from "next/image";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { authorStats } from "@/lib/homepage-data";
 import { StatMetric } from "./stat-metric";
 
-export function AuthorProfileCard() {
+type AuthorProfileCardProps = {
+  stats: Array<{ label: string; value: string }>;
+};
+
+export function AuthorProfileCard({ stats }: AuthorProfileCardProps) {
   return (
     <Card className="border-slate-200/80 shadow-none">
       <CardContent className="space-y-6 p-6">
@@ -32,7 +35,7 @@ export function AuthorProfileCard() {
           深圳
         </div>
         <div className="grid grid-cols-3 divide-x border-t pt-5">
-          {authorStats.map((stat) => (
+          {stats.map((stat) => (
             <StatMetric key={stat.label} value={stat.value} label={stat.label} />
           ))}
         </div>

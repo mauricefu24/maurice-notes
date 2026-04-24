@@ -6,12 +6,13 @@ import { AuthorMiniCard, BlockHeading, SidebarPanel, SurfaceCard, TagPill } from
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { categoryTabs, popularTags, recommendedAuthors } from "@/lib/public-page-data";
-import { getCategories, getPublishedPosts } from "@/services/blog-service";
+import { getBlogStats, getCategories, getPublishedPosts } from "@/services/blog-service";
 import { NewsletterSignup } from "@/components/public/newsletter-signup";
 
 export default async function CategoriesPage() {
   const categories = await getCategories();
   const posts = await getPublishedPosts();
+  const stats = await getBlogStats();
   const featuredCategory = categories[1];
 
   return (
@@ -56,8 +57,8 @@ export default async function CategoriesPage() {
               </div>
               <div className="grid grid-cols-3 divide-x text-sm">
                 <div><p className="text-xl font-semibold">{featuredCategory.postCount}</p><p className="text-muted-foreground">文章数</p></div>
-                <div className="pl-4"><p className="text-xl font-semibold">12.8K</p><p className="text-muted-foreground">关注度</p></div>
-                <div className="pl-4"><p className="text-xl font-semibold">18</p><p className="text-muted-foreground">作者</p></div>
+                <div className="pl-4"><p className="text-xl font-semibold">{stats.totalViewsLabel}</p><p className="text-muted-foreground">总阅读</p></div>
+                <div className="pl-4"><p className="text-xl font-semibold">{stats.totalCategories}</p><p className="text-muted-foreground">分类数</p></div>
               </div>
               <Button asChild className="gap-2">
                 <Link href="/articles">探索产品分类 <ArrowRight className="h-4 w-4" /></Link>
@@ -74,7 +75,7 @@ export default async function CategoriesPage() {
             <TagPill active>最新</TagPill>
             <TagPill>最热</TagPill>
             <TagPill>推荐</TagPill>
-            <span className="ml-auto text-muted-foreground">共 128 篇文章</span>
+            <span className="ml-auto text-muted-foreground">共 {posts.length} 篇文章</span>
           </div>
 
           {categories.slice(0, 3).map((category, index) => {
@@ -102,9 +103,9 @@ export default async function CategoriesPage() {
         <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
           <SidebarPanel title="热门标签">
             <div className="flex flex-wrap gap-2">
-              {popularTags.map((tag, index) => (
+              {popularTags.map((tag) => (
                 <span key={tag} className="rounded-md bg-slate-50 px-3 py-1.5 text-sm text-slate-600">
-                  {tag} <span className="ml-1 text-xs text-muted-foreground">{index % 2 ? "12.8K" : "20.6K"}</span>
+                  {tag} <span className="ml-1 text-xs text-muted-foreground">{posts.length}</span>
                 </span>
               ))}
             </div>

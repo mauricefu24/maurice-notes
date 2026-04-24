@@ -1,21 +1,23 @@
-import { Calendar, Check, ChevronDown, Clock, History, ImageIcon, Link2, Save, Undo2 } from "lucide-react";
+import { Calendar, Check, Clock, History, ImageIcon, Link2, Save, Undo2 } from "lucide-react";
 import Image from "next/image";
 
-import { AdminCard, AdminPageTitle, EditorInput, ToggleRow } from "@/components/admin/admin-blocks";
+import { AdminCard, AdminPageTitle, EditorInput } from "@/components/admin/admin-blocks";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { editorCategories, featureToggles } from "@/lib/admin-data";
+import { editorCategories } from "@/lib/admin-data";
 import type { Post } from "@/types/blog";
 
 type PostEditorScreenProps = {
   mode: "new" | "edit";
   post?: Post;
   action: (formData: FormData) => void | Promise<void>;
+  draftAction: (formData: FormData) => void | Promise<void>;
+  publishAction: (formData: FormData) => void | Promise<void>;
 };
 
-export function PostEditorScreen({ mode, post, action }: PostEditorScreenProps) {
+export function PostEditorScreen({ mode, post, action, draftAction, publishAction }: PostEditorScreenProps) {
   const title = post?.title ?? "通过文字与代码，探索更大的世界";
   const excerpt =
     post?.excerpt ?? "这里是 Maurice 的数字花园，记录技术、产品、设计与生活中的思考与实践，期待与你一同探索更多可能。";
@@ -24,6 +26,7 @@ export function PostEditorScreen({ mode, post, action }: PostEditorScreenProps) 
     "在这个信息爆炸的时代，我们每天都会接触到大量的内容。但真正能够带来价值的，往往是那些经过思考、沉淀和实践的知识与经验。";
   const image = post?.image ?? "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80";
   const publishedAt = post?.publishedAt ?? new Date().toISOString().slice(0, 10);
+  const wordCount = content.replace(/\s/g, "").length;
 
   return (
     <form action={action} className="space-y-6">
@@ -35,12 +38,16 @@ export function PostEditorScreen({ mode, post, action }: PostEditorScreenProps) 
         <div className="flex flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-2 text-sm text-note-teal">
             <Check className="h-4 w-4" />
-            已自动保存 10:32:45
+            已连接数据库保存
           </span>
-          <Button type="button" variant="outline" className="gap-2"><History className="h-4 w-4" />版本历史</Button>
-          <Button type="submit" name="status" value="draft" variant="outline" className="gap-2"><Save className="h-4 w-4" />保存草稿</Button>
-          {post?.slug ? <Button asChild variant="outline"><a href={`/articles/${post.slug}`} target="_blank">预览</a></Button> : null}
-          <Button type="submit" name="status" value="published" className="gap-2">发布 <ChevronDown className="h-4 w-4" /></Button>
+          <Button type="button" variant="outline" className="gap-2" disabled><History className="h-4 w-4" />版本历史</Button>
+          <Button type="submit" formAction={draftAction} variant="outline" className="gap-2"><Save className="h-4 w-4" />保存草稿</Button>
+          {post?.slug && post.status === "published" ? (
+            <Button asChild variant="outline"><a href={`/articles/${post.slug}`} target="_blank">预览</a></Button>
+          ) : (
+            <Button type="button" variant="outline" disabled>预览</Button>
+          )}
+          <Button type="submit" formAction={publishAction} className="gap-2">发布</Button>
         </div>
       </div>
 
@@ -57,9 +64,9 @@ export function PostEditorScreen({ mode, post, action }: PostEditorScreenProps) 
               <EditorInput label="内容" required>
                 <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
                   <div className="flex flex-wrap items-center gap-1 border-b bg-slate-50 px-3 py-2 text-sm text-slate-600">
-                    <Button type="button" variant="ghost" size="icon" aria-label="撤销"><Undo2 className="h-4 w-4" /></Button>
+                    <Button type="button" variant="ghost" size="icon" aria-label="撤销" disabled><Undo2 className="h-4 w-4" /></Button>
                     {["正文", "B", "I", "U", "S", "</>", "“”", "列表", "链接", "图片", "表格", "更多"].map((item) => (
-                      <Button key={item} type="button" variant="ghost" size="sm">{item}</Button>
+                      <Button key={item} type="button" variant="ghost" size="sm" disabled>{item}</Button>
                     ))}
                   </div>
                   <div className="space-y-6 p-6">
@@ -92,7 +99,7 @@ export function PostEditorScreen({ mode, post, action }: PostEditorScreenProps) 
                       ))}
                     </div>
                     <div className="flex justify-center border-t pt-5">
-                      <Button type="button" variant="outline" size="icon" aria-label="添加区块">+</Button>
+                      <Button type="button" variant="outline" size="icon" aria-label="添加区块" disabled>+</Button>
                     </div>
                     <h2 className="text-2xl font-semibold text-note-ink">近期计划</h2>
                     <ol className="list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-600">
@@ -104,7 +111,7 @@ export function PostEditorScreen({ mode, post, action }: PostEditorScreenProps) 
                 </div>
               </EditorInput>
               <div className="flex justify-between border-t pt-4 text-xs text-muted-foreground">
-                <span>字数统计：1,286 字　阅读时长：约 6 分钟</span>
+                <span>字数统计：{wordCount} 字　阅读时长：{post?.readingTime ?? "约 6 分钟"}</span>
                 <span>元素路径：p &gt; img</span>
               </div>
             </CardContent>
@@ -129,10 +136,10 @@ export function PostEditorScreen({ mode, post, action }: PostEditorScreenProps) 
                   ))}
                 </select>
               </EditorInput>
-              <EditorInput label="标签">
+              <EditorInput label="标签（暂未启用）">
                 <div className="flex min-h-11 flex-wrap gap-2 rounded-md border border-slate-200 p-2">
                   {["个人博客", "设计", "前端"].map((tag) => (
-                    <span key={tag} className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">{tag} ×</span>
+                    <span key={tag} className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">{tag}</span>
                   ))}
                 </div>
               </EditorInput>
@@ -147,15 +154,15 @@ export function PostEditorScreen({ mode, post, action }: PostEditorScreenProps) 
                       sizes="300px"
                     />
                   </div>
-                  <Button type="button" variant="outline" className="w-full gap-2"><ImageIcon className="h-4 w-4" />更换图片</Button>
+                  <Button type="button" variant="outline" className="w-full gap-2" disabled><ImageIcon className="h-4 w-4" />更换图片</Button>
                   <Input name="image" defaultValue={image} placeholder="封面图 URL" />
                   <p className="text-xs text-muted-foreground">推荐尺寸：1200x630px，JPG/PNG 格式</p>
                 </div>
               </EditorInput>
               <EditorInput label="发布时间">
                 <div className="space-y-3 text-sm">
-                  <label className="flex items-center gap-2"><input type="radio" defaultChecked />立即发布</label>
-                  <label className="flex items-center gap-2"><input type="radio" />定时发布</label>
+                  <label className="flex items-center gap-2"><input type="radio" name="publishMode" defaultChecked />立即发布</label>
+                  <label className="flex items-center gap-2 text-muted-foreground"><input type="radio" name="publishMode" disabled />定时发布</label>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="relative">
                       <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -180,10 +187,10 @@ export function PostEditorScreen({ mode, post, action }: PostEditorScreenProps) 
             </CardHeader>
             <CardContent className="space-y-4 p-5 pt-0">
               <EditorInput label="SEO 标题">
-                <Input defaultValue={`${title} | Maurice Notes`} />
+                <Input defaultValue={`${title} | Maurice Notes`} disabled />
               </EditorInput>
               <EditorInput label="SEO 描述">
-                <Textarea defaultValue={excerpt} />
+                <Textarea defaultValue={excerpt} disabled />
               </EditorInput>
               <EditorInput label="URL 别名">
                 <div className="flex items-center gap-2">
@@ -206,10 +213,10 @@ export function PostEditorScreen({ mode, post, action }: PostEditorScreenProps) 
               <CardTitle className="text-lg tracking-normal">更多设置</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 p-5 pt-0">
-              {featureToggles.slice(0, 4).map((toggle) => (
-                <ToggleRow key={toggle.label} {...toggle} />
-              ))}
-              <Button type="submit" name="status" value="draft" variant="outline" className="mt-3 w-full text-red-600">移至草稿</Button>
+              <div className="rounded-lg bg-slate-50 p-4 text-sm leading-6 text-muted-foreground">
+                评论、邮件订阅、隐私模式等站点级开关请在系统设置中统一管理。
+              </div>
+              <Button type="submit" formAction={draftAction} variant="outline" className="mt-3 w-full text-red-600">移至草稿</Button>
             </CardContent>
           </AdminCard>
         </aside>

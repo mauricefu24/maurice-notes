@@ -5,9 +5,19 @@ import Link from "next/link";
 import { BlockHeading, ContactLine, MetricTile, SurfaceCard, defaultContactIcons } from "@/components/public/page-blocks";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
-import { aboutContact, aboutFaqs, aboutStats, experience, projects, skillCards, values } from "@/lib/public-page-data";
+import { aboutContact, aboutFaqs, experience, projects, skillCards, values } from "@/lib/public-page-data";
+import { getBlogStats } from "@/services/blog-service";
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const stats = await getBlogStats();
+  const aboutStats = [
+    { label: "发布文章", value: `${stats.publishedPosts}` },
+    { label: "累计阅读", value: stats.totalViewsLabel },
+    { label: "内容分类", value: `${stats.totalCategories}` },
+    { label: "评论互动", value: `${stats.totalComments}` },
+    { label: "草稿储备", value: `${stats.draftPosts}` },
+  ];
+
   return (
     <div className="page-shell space-y-12 py-8">
       <section className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">

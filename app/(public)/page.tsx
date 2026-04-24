@@ -11,12 +11,18 @@ import { NewsletterCard } from "@/components/public/home/newsletter-card";
 import { SectionHeading } from "@/components/public/home/section-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { homeCategories } from "@/lib/homepage-data";
-import { getFeaturedPosts, getPublishedPosts } from "@/services/blog-service";
+import { getBlogStats, getCategories, getFeaturedPosts, getPublishedPosts } from "@/services/blog-service";
 
 export default async function HomePage() {
   const featuredArticles = await getFeaturedPosts();
   const latestArticles = (await getPublishedPosts()).slice(0, 4);
+  const categories = await getCategories();
+  const stats = await getBlogStats();
+  const authorStats = [
+    { label: "阅读总数", value: stats.totalViewsLabel },
+    { label: "文章总数", value: `${stats.totalPosts}` },
+    { label: "分类数量", value: `${stats.totalCategories}` },
+  ];
 
   return (
     <div className="bg-white">
@@ -63,8 +69,8 @@ export default async function HomePage() {
       <section className="page-shell space-y-6 py-6">
         <SectionHeading title="分类导航" />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          {homeCategories.map((category) => (
-            <CategoryTile key={category.id} category={category} />
+          {categories.map((category) => (
+            <CategoryTile key={category.slug} category={category} />
           ))}
         </div>
       </section>
@@ -81,7 +87,7 @@ export default async function HomePage() {
           </CardContent>
         </Card>
         <div className="space-y-6">
-          <AuthorProfileCard />
+          <AuthorProfileCard stats={authorStats} />
           <NewsletterCard />
         </div>
       </section>

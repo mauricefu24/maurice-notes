@@ -6,13 +6,20 @@ import { MetricTile, MiniArticleCard, SidebarPanel, SurfaceCard, TagPill } from 
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { archiveStats, archiveYears, popularTags } from "@/lib/public-page-data";
-import { getArchiveYears, getCategories, getPublishedPosts } from "@/services/blog-service";
+import { popularTags } from "@/lib/public-page-data";
+import { getArchiveYears, getBlogStats, getCategories, getPublishedPosts } from "@/services/blog-service";
 
 export default async function ArchivesPage() {
   const years = await getArchiveYears();
   const categories = await getCategories();
   const posts = await getPublishedPosts();
+  const stats = await getBlogStats();
+  const archiveStats = [
+    { label: "文章总数", value: `${stats.publishedPosts}` },
+    { label: "分类数量", value: `${stats.totalCategories}` },
+    { label: "评论数量", value: `${stats.totalComments}` },
+    { label: "累计阅读", value: stats.totalViewsLabel },
+  ];
 
   return (
     <div className="page-shell space-y-8 py-8">
@@ -134,7 +141,7 @@ export default async function ArchivesPage() {
         <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
           <SidebarPanel title="归档统计">
             <div className="space-y-4">
-              <MetricTile value="128" label="全部文章" icon={<Archive className="h-5 w-5" />} />
+              <MetricTile value={`${stats.publishedPosts}`} label="全部文章" icon={<Archive className="h-5 w-5" />} />
               {categories.map((category) => (
                 <div key={category.slug} className="flex items-center justify-between text-sm">
                   <span className="text-slate-600">{category.name}</span>
@@ -145,13 +152,15 @@ export default async function ArchivesPage() {
           </SidebarPanel>
           <SidebarPanel title="按年份浏览">
             <div className="space-y-3">
-              {archiveYears.map((item) => (
+              {years.map((item) => (
                 <div key={item.year} className="flex items-center justify-between rounded-md p-2 hover:bg-slate-50">
                   <span className="inline-flex items-center gap-2 text-sm text-slate-600">
                     <CalendarDays className="h-4 w-4" />
                     {item.year}
                   </span>
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-muted-foreground">{item.count}</span>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-muted-foreground">
+                    {item.months.reduce((total, month) => total + month.posts.length, 0)}
+                  </span>
                 </div>
               ))}
             </div>

@@ -1,17 +1,49 @@
-import { BarChart3, Edit3, MoreHorizontal, Plus, Search, Tags, Trash2 } from "lucide-react";
+import { CalendarCheck, CheckCircle2, Edit3, Eye, FileCheck2, FilePenLine, FileText, MessageSquare, PencilLine, Plus, Search, Tags, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { deletePost, updatePostStatus } from "@/app/(admin)/admin/posts/actions";
 import { AdminCard, AdminFilterBar, AdminPageTitle, AdminSearchInput, AdminStatCard, AdminStatusBadge, MiniPostRank, QuickActionRow, SelectLike, SidePanel } from "@/components/admin/admin-blocks";
+import { ConfirmSubmitButton } from "@/components/admin/confirm-submit-button";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { adminMetrics, contentHealth } from "@/lib/admin-data";
+import { contentHealth } from "@/lib/admin-data";
 import { getPostStatusLabel } from "@/lib/status-labels";
-import { getAllPosts } from "@/services/blog-service";
+import { getAllPosts, getBlogStats } from "@/services/blog-service";
+import type { PostStatus } from "@/types/blog";
 
-export default async function AdminPostsPage() {
-  const posts = await getAllPosts();
+type AdminPostsPageProps = {
+  searchParams?: Promise<{ status?: string }>;
+};
+
+const statusFilters: Array<{ label: string; value: "all" | PostStatus }> = [
+  { label: "全部", value: "all" },
+  { label: "已发布", value: "published" },
+  { label: "草稿", value: "draft" },
+  { label: "审核中", value: "review" },
+];
+
+export default async function AdminPostsPage({ searchParams }: AdminPostsPageProps) {
+  const params = (await searchParams) ?? {};
+  const activeStatus = statusFilters.some((item) => item.value === params.status) ? params.status : "all";
+  const allPosts = await getAllPosts();
+  const stats = await getBlogStats();
+  const posts = activeStatus === "all" ? allPosts : allPosts.filter((post) => post.status === activeStatus);
+  const counts = {
+    all: allPosts.length,
+    published: allPosts.filter((post) => post.status === "published").length,
+    draft: allPosts.filter((post) => post.status === "draft").length,
+    review: allPosts.filter((post) => post.status === "review").length,
+  };
+  const adminMetrics = [
+    { label: "全部文章", value: `${stats.totalPosts}`, delta: "实时数据", icon: FileText, tone: "bg-teal-50 text-teal-700" },
+    { label: "已发布", value: `${stats.publishedPosts}`, delta: "实时数据", icon: FileCheck2, tone: "bg-emerald-50 text-emerald-700" },
+    { label: "草稿", value: `${stats.draftPosts}`, delta: "实时数据", icon: PencilLine, tone: "bg-orange-50 text-orange-700" },
+    { label: "审核中", value: `${stats.reviewPosts}`, delta: "实时数据", icon: CalendarCheck, tone: "bg-amber-50 text-amber-700" },
+    { label: "总浏览量", value: stats.totalViewsLabel, delta: "文章累计", icon: Eye, tone: "bg-blue-50 text-blue-700" },
+    { label: "总评论数", value: `${stats.totalComments}`, delta: `${stats.pendingComments} 待审核`, icon: MessageSquare, tone: "bg-violet-50 text-violet-700" },
+  ];
 
   return (
     <div className="space-y-8">
@@ -50,12 +82,20 @@ export default async function AdminPostsPage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
         <AdminCard>
           <CardContent className="space-y-5 p-5">
-            <Tabs defaultValue="all">
+            <Tabs value={activeStatus}>
               <TabsList className="bg-transparent p-0">
-                <TabsTrigger value="all" className="rounded-none border-b-2 border-transparent data-[state=active]:border-note-teal data-[state=active]:shadow-none">全部 128</TabsTrigger>
-                <TabsTrigger value="published" className="rounded-none border-b-2 border-transparent data-[state=active]:border-note-teal data-[state=active]:shadow-none">已发布 96</TabsTrigger>
-                <TabsTrigger value="draft" className="rounded-none border-b-2 border-transparent data-[state=active]:border-note-teal data-[state=active]:shadow-none">草稿 20</TabsTrigger>
-                <TabsTrigger value="review" className="rounded-none border-b-2 border-transparent data-[state=active]:border-note-teal data-[state=active]:shadow-none">审核中 12</TabsTrigger>
+                {statusFilters.map((filter) => (
+                  <TabsTrigger
+                    key={filter.value}
+                    value={filter.value}
+                    asChild
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-note-teal data-[state=active]:shadow-none"
+                  >
+                    <Link href={filter.value === "all" ? "/admin/posts" : `/admin/posts?status=${filter.value}`}>
+                      {filter.label} {counts[filter.value]}
+                    </Link>
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </Tabs>
 
@@ -75,8 +115,8 @@ export default async function AdminPostsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
-                  {posts.concat(posts.slice(0, 4)).map((post, index) => (
-                    <tr key={`${post.id}-${index}`} className="hover:bg-slate-50/70">
+                  {posts.map((post) => (
+                    <tr key={post.id} className="hover:bg-slate-50/70">
                       <td className="px-4 py-4"><input type="checkbox" aria-label={`选择 ${post.title}`} /></td>
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
@@ -109,12 +149,38 @@ export default async function AdminPostsPage() {
                               <Edit3 className="h-4 w-4" />
                             </Link>
                           </Button>
-                          <Button variant="outline" size="icon" aria-label="数据">
-                            <BarChart3 className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" aria-label="更多">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                          {post.status === "published" ? (
+                            <Button asChild variant="outline" size="icon" aria-label="预览文章">
+                              <Link href={`/articles/${post.slug}`} target="_blank">
+                                <Eye className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                          ) : (
+                            <Button variant="outline" size="icon" aria-label="未发布文章不可预览" disabled>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <form action={updatePostStatus.bind(null, post.id, post.status === "published" ? "draft" : "published")}>
+                            <Button
+                              type="submit"
+                              variant="outline"
+                              size="icon"
+                              aria-label={post.status === "published" ? "设为草稿" : "发布文章"}
+                            >
+                              {post.status === "published" ? <FilePenLine className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                            </Button>
+                          </form>
+                          <form action={deletePost.bind(null, post.id)}>
+                            <ConfirmSubmitButton
+                              message={`确认删除《${post.title}》吗？此操作不可撤销。`}
+                              variant="ghost"
+                              size="icon"
+                              aria-label="删除文章"
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </ConfirmSubmitButton>
+                          </form>
                         </div>
                       </td>
                     </tr>
@@ -126,18 +192,14 @@ export default async function AdminPostsPage() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>已选择 0 项</span>
-                <Button variant="outline" size="sm">批量发布</Button>
-                <Button variant="outline" size="sm">批量设为草稿</Button>
-                <Button variant="outline" size="sm" className="text-red-600"><Trash2 className="mr-1 h-4 w-4" />批量删除</Button>
+                <Button variant="outline" size="sm" disabled>批量发布</Button>
+                <Button variant="outline" size="sm" disabled>批量设为草稿</Button>
+                <Button variant="outline" size="sm" disabled className="text-red-600"><Trash2 className="mr-1 h-4 w-4" />批量删除</Button>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">共 128 条</span>
-                <Button variant="outline" size="sm">10 条/页</Button>
+                <span className="text-muted-foreground">共 {posts.length} 条</span>
+                <Button variant="outline" size="sm" disabled>10 条/页</Button>
                 <Button size="sm">1</Button>
-                <Button variant="ghost" size="sm">2</Button>
-                <Button variant="ghost" size="sm">3</Button>
-                <Button variant="ghost" size="sm">...</Button>
-                <Button variant="ghost" size="sm">13</Button>
               </div>
             </div>
           </CardContent>

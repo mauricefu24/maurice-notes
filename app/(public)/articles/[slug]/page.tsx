@@ -69,7 +69,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
                 {post.views} 阅读
               </span>
             </div>
-            <ArticleActions title={post.title} />
+            <ArticleActions title={post.title} initialLikes={post.comments} />
           </section>
 
           <div className="relative h-[420px] overflow-hidden rounded-lg border border-slate-200">

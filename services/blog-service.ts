@@ -86,6 +86,25 @@ function parseDate(value: string) {
   return new Date(`${value}T00:00:00.000Z`);
 }
 
+function parseViews(value: string) {
+  const normalized = value.trim().toUpperCase();
+
+  if (normalized.endsWith("K")) {
+    return Math.round(Number(normalized.slice(0, -1)) * 1000);
+  }
+
+  return Number(normalized.replace(/,/g, "")) || 0;
+}
+
+function formatCompactNumber(value: number) {
+  if (value >= 1000) {
+    const compact = value / 1000;
+    return `${Number.isInteger(compact) ? compact.toFixed(0) : compact.toFixed(1)}K`;
+  }
+
+  return `${value}`;
+}
+
 async function seedPostsIfEmpty() {
   const count = await prisma.post.count();
 
@@ -277,16 +296,85 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   );
 }
 
+export async function getBlogStats() {
+  return withMockFallback(
+    async () => {
+      const [allPosts, dbCategories, dbComments] = await Promise.all([
+        prisma.post.findMany({
+          select: {
+            status: true,
+            views: true,
+            comments: true,
+          },
+        }),
+        prisma.category.findMany({ select: { slug: true } }),
+        prisma.comment.findMany({ select: { status: true } }),
+      ]);
+
+      const publishedPosts = allPosts.filter((post) => post.status === "published");
+      const draftPosts = allPosts.filter((post) => post.status === "draft");
+      const reviewPosts = allPosts.filter((post) => post.status === "review");
+      const totalViews = allPosts.reduce((total, post) => total + parseViews(post.views), 0);
+      const totalPostComments = allPosts.reduce((total, post) => total + post.comments, 0);
+      const pendingComments = dbComments.filter((comment) => comment.status === "pending");
+      const approvedComments = dbComments.filter((comment) => comment.status === "approved");
+      const spamComments = dbComments.filter((comment) => comment.status === "spam");
+      const deletedComments = dbComments.filter((comment) => comment.status === "deleted");
+
+      return {
+        totalPosts: allPosts.length,
+        publishedPosts: publishedPosts.length,
+        draftPosts: draftPosts.length,
+        reviewPosts: reviewPosts.length,
+        totalViews,
+        totalViewsLabel: formatCompactNumber(totalViews),
+        totalPostComments,
+        totalComments: dbComments.length,
+        pendingComments: pendingComments.length,
+        approvedComments: approvedComments.length,
+        spamComments: spamComments.length,
+        deletedComments: deletedComments.length,
+        totalCategories: dbCategories.length,
+      };
+    },
+    {
+      totalPosts: posts.length,
+      publishedPosts: posts.filter((post) => post.status === "published").length,
+      draftPosts: posts.filter((post) => post.status === "draft").length,
+      reviewPosts: posts.filter((post) => post.status === "review").length,
+      totalViews: posts.reduce((total, post) => total + parseViews(post.views), 0),
+      totalViewsLabel: formatCompactNumber(posts.reduce((total, post) => total + parseViews(post.views), 0)),
+      totalPostComments: posts.reduce((total, post) => total + post.comments, 0),
+      totalComments: comments.length,
+      pendingComments: comments.filter((comment) => comment.status === "pending").length,
+      approvedComments: comments.filter((comment) => comment.status === "approved").length,
+      spamComments: 0,
+      deletedComments: 0,
+      totalCategories: categories.length,
+    },
+  );
+}
+
 export async function getArchiveYears() {
   const publishedPosts = await getPublishedPosts();
+  const yearMap = new Map<string, Map<string, Post[]>>();
 
-  return [
-    {
-      year: "2024",
-      months: [
-        { month: "5 月", posts: publishedPosts.filter((post) => post.publishedAt.startsWith("2024-05")) },
-        { month: "4 月", posts: publishedPosts.filter((post) => post.publishedAt.startsWith("2024-04")) },
-      ],
-    },
-  ];
+  for (const post of publishedPosts) {
+    const [year, month] = post.publishedAt.split("-");
+    const monthLabel = `${Number(month)} 月`;
+
+    if (!yearMap.has(year)) {
+      yearMap.set(year, new Map());
+    }
+
+    const monthMap = yearMap.get(year)!;
+    monthMap.set(monthLabel, [...(monthMap.get(monthLabel) ?? []), post]);
+  }
+
+  return Array.from(yearMap.entries())
+    .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA))
+    .map(([year, monthMap]) => ({
+      year,
+      months: Array.from(monthMap.entries()).map(([month, monthPosts]) => ({ month, posts: monthPosts })),
+    }));
 }

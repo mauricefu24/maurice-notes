@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, MessageSquare, Search, X } from "lucide-react";
+import { AlertTriangle, Bell, Check, FileCheck2, MessageSquare, Search, Trash2, X } from "lucide-react";
 import Image from "next/image";
 
 import { AdminCard, AdminFilterBar, AdminPageTitle, AdminSearchInput, AdminStatusBadge, CommentActionButtons, SelectLike, SidePanel } from "@/components/admin/admin-blocks";
@@ -6,12 +6,25 @@ import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updateCommentStatus } from "@/app/(admin)/admin/comments/actions";
-import { commentOverview } from "@/lib/admin-data";
 import { getCommentStatusLabel } from "@/lib/status-labels";
-import { getComments } from "@/services/blog-service";
+import { getBlogStats, getComments } from "@/services/blog-service";
 
 export default async function AdminCommentsPage() {
   const comments = await getComments();
+  const stats = await getBlogStats();
+  const commentOverview = [
+    { label: "总评论数", value: `${stats.totalComments}`, icon: MessageSquare, tone: "bg-blue-50 text-blue-700" },
+    { label: "待审核", value: `${stats.pendingComments}`, icon: Bell, tone: "bg-orange-50 text-orange-700" },
+    { label: "已通过", value: `${stats.approvedComments}`, icon: FileCheck2, tone: "bg-emerald-50 text-emerald-700" },
+    { label: "垃圾评论", value: `${stats.spamComments}`, icon: Trash2, tone: "bg-rose-50 text-rose-700" },
+  ];
+  const tabs = [
+    `全部 ${stats.totalComments}`,
+    `待审核 ${stats.pendingComments}`,
+    `已通过 ${stats.approvedComments}`,
+    `垃圾评论 ${stats.spamComments}`,
+    `已删除 ${stats.deletedComments}`,
+  ];
 
   return (
     <div className="space-y-8">
@@ -19,7 +32,7 @@ export default async function AdminCommentsPage() {
 
       <Tabs defaultValue="all">
         <TabsList className="h-auto gap-7 border-b bg-transparent p-0">
-          {["全部 1,245", "待审核 156", "已通过 982", "垃圾评论 67", "已删除 40"].map((tab, index) => (
+          {tabs.map((tab, index) => (
             <TabsTrigger
               key={tab}
               value={`tab-${index}`}
@@ -134,13 +147,13 @@ export default async function AdminCommentsPage() {
           <SidePanel title="评论回复率">
             <div className="text-center">
               <div className="mx-auto grid h-32 w-32 place-items-center rounded-full border-[18px] border-note-teal">
-                <span className="text-3xl font-semibold text-note-ink">86%</span>
+                <span className="text-3xl font-semibold text-note-ink">{stats.totalComments ? Math.round((stats.approvedComments / stats.totalComments) * 100) : 0}%</span>
               </div>
-              <p className="mt-3 text-sm text-emerald-600">较上周 ↑ 12%</p>
+              <p className="mt-3 text-sm text-emerald-600">基于当前评论数据</p>
               <div className="mt-5 space-y-2 text-sm text-muted-foreground">
-                <div className="flex justify-between"><span>已回复评论</span><span>1,072</span></div>
-                <div className="flex justify-between"><span>未回复评论</span><span>173</span></div>
-                <div className="flex justify-between"><span>平均回复时间</span><span>4.2 小时</span></div>
+                <div className="flex justify-between"><span>已通过评论</span><span>{stats.approvedComments}</span></div>
+                <div className="flex justify-between"><span>待审评论</span><span>{stats.pendingComments}</span></div>
+                <div className="flex justify-between"><span>垃圾评论</span><span>{stats.spamComments}</span></div>
               </div>
             </div>
           </SidePanel>
