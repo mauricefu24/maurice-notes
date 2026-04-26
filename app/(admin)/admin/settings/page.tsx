@@ -1,5 +1,6 @@
 import { Github, Mail, Plus, RotateCcw, Save, Twitter } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { AdminCard, AdminPageTitle, EditorInput, ToggleRow } from "@/components/admin/admin-blocks";
 import { Button } from "@/components/ui/button";
@@ -10,18 +11,31 @@ import { saveSiteSettings } from "@/app/(admin)/admin/settings/actions";
 import { featureToggles, settingsTabs } from "@/lib/admin-data";
 import { getSiteSettings } from "@/services/blog-service";
 
-export default async function AdminSettingsPage() {
+type AdminSettingsPageProps = {
+  searchParams?: Promise<{ success?: string; error?: string }>;
+};
+
+export default async function AdminSettingsPage({ searchParams }: AdminSettingsPageProps) {
+  const params = (await searchParams) ?? {};
   const settings = await getSiteSettings();
 
   return (
     <form action={saveSiteSettings} className="space-y-8">
       <AdminPageTitle title="系统设置" description="管理站点设置、外观和功能配置，打造属于你的品牌空间。" />
 
+      {params.error ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{params.error}</div>
+      ) : null}
+      {params.success ? (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{params.success}</div>
+      ) : null}
+
       <div className="flex gap-8 border-b border-slate-100">
         {settingsTabs.map((tab, index) => (
           <button
             type="button"
             key={tab}
+            disabled={index !== 0}
             className={index === 0 ? "border-b-2 border-note-teal pb-4 text-sm font-medium text-note-teal" : "pb-4 text-sm font-medium text-muted-foreground"}
           >
             {tab}
@@ -41,8 +55,8 @@ export default async function AdminSettingsPage() {
               <span className="pt-3 text-sm text-muted-foreground">站点 Logo</span>
               <div className="flex items-center gap-5">
                 <div className="grid h-16 w-16 place-items-center rounded-lg border bg-note-mint text-3xl font-bold text-note-teal">M</div>
-                <Button type="button" variant="outline">更换 Logo</Button>
-                <Button type="button" variant="outline" className="text-red-600">移除</Button>
+                <Button type="button" variant="outline" disabled>更换 Logo</Button>
+                <Button type="button" variant="outline" className="text-red-600" disabled>移除</Button>
                 <span className="text-xs text-muted-foreground">建议尺寸：512 × 512px，支持 PNG、JPG、SVG</span>
               </div>
               <span className="pt-3 text-sm text-muted-foreground">站点描述</span>
@@ -80,7 +94,7 @@ export default async function AdminSettingsPage() {
                     </div>
                   );
                 })}
-                <Button type="button" variant="outline" className="w-full border-dashed"><Plus className="mr-2 h-4 w-4" />添加链接</Button>
+                <Button type="button" variant="outline" className="w-full border-dashed" disabled><Plus className="mr-2 h-4 w-4" />添加链接</Button>
               </CardContent>
             </AdminCard>
 
@@ -95,10 +109,10 @@ export default async function AdminSettingsPage() {
                 <Input name="icp" defaultValue={settings.icp} />
                 <Input name="copyright" defaultValue={settings.copyright} />
                 <div className="grid grid-cols-2 gap-3">
-                  <Input defaultValue="关于我 /about" />
-                  <Input defaultValue="联系方式 /contact" />
+                  <Input defaultValue="关于我 /about" disabled />
+                  <Input defaultValue="联系方式 /contact" disabled />
                 </div>
-                <Button type="button" variant="outline" className="border-dashed"><Plus className="mr-2 h-4 w-4" />添加链接</Button>
+                <Button type="button" variant="outline" className="border-dashed" disabled><Plus className="mr-2 h-4 w-4" />添加链接</Button>
               </CardContent>
             </AdminCard>
           </div>
@@ -115,7 +129,7 @@ export default async function AdminSettingsPage() {
                     {["bg-note-teal", "bg-blue-500", "bg-violet-500", "bg-indigo-500", "bg-orange-400", "bg-red-500"].map((color) => (
                       <span key={color} className={`h-8 w-8 rounded-md ${color}`} />
                     ))}
-                    <Button type="button" variant="outline" size="icon"><Plus className="h-4 w-4" /></Button>
+                    <Button type="button" variant="outline" size="icon" disabled><Plus className="h-4 w-4" /></Button>
                   </div>
                 </div>
                 <div className="grid grid-cols-[96px_1fr] items-center gap-3">
@@ -156,7 +170,7 @@ export default async function AdminSettingsPage() {
                     <p className="font-semibold text-note-ink">Maurice Notes</p>
                     <h3 className="text-2xl font-semibold">通过文字与代码探索<span className="text-note-teal">更大的世界</span></h3>
                     <p className="text-sm text-muted-foreground">这里是 Maurice 的数字花园，记录技术、产品、设计与生活中的思考。</p>
-                    <Button type="button" size="sm">浏览最新文章</Button>
+                    <Button asChild size="sm"><Link href="/articles">浏览最新文章</Link></Button>
                   </div>
                   <div className="relative h-28">
                     <Image
@@ -199,7 +213,7 @@ export default async function AdminSettingsPage() {
                   <p className="w-fit rounded-md bg-note-mint px-2 py-1 text-xs text-note-teal">分享思考 · 记录成长</p>
                   <h3 className="text-2xl font-semibold leading-tight">通过文字与代码探索<span className="text-note-teal">更大的世界</span></h3>
                   <p className="text-xs leading-5 text-muted-foreground">这里是 Maurice 的数字花园，记录技术、产品、设计与生活中的思考。</p>
-                  <Button type="button" size="sm">浏览最新文章</Button>
+                  <Button asChild size="sm"><Link href="/articles">浏览最新文章</Link></Button>
                 </div>
                 <div className="relative h-36">
                   <Image
@@ -220,7 +234,7 @@ export default async function AdminSettingsPage() {
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-emerald-50">✓</span>
                 <div>
                   <p className="font-semibold">所有设置已保存</p>
-                  <p className="text-xs text-muted-foreground">最后保存时间 2024-05-12 10:30:24</p>
+                  <p className="text-xs text-muted-foreground">保存后会立即同步到前台页面</p>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">保存者：Maurice</p>

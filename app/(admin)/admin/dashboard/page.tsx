@@ -1,11 +1,10 @@
-import { Circle, Eye, FileCheck2, FileText, MessageSquare } from "lucide-react";
+import { Circle, Eye, FileCheck2, FileText, MessageSquare, Plus, Settings, Tags } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { AdminCard, AdminPageTitle, AdminStatCard, QuickActionRow, SidePanel } from "@/components/admin/admin-blocks";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { quickActions, trafficData } from "@/lib/admin-data";
 import { getCommentStatusLabel, getPostStatusLabel } from "@/lib/status-labels";
 import { getAllPosts, getBlogStats, getCategories, getComments } from "@/services/blog-service";
 
@@ -31,12 +30,27 @@ export default async function AdminDashboardPage() {
     { title: `处理 ${stats.reviewPosts} 篇审核中文章`, due: `${stats.reviewPosts}`, status: "进行中" },
     { title: `维护 ${stats.totalCategories} 个内容分类`, due: `${stats.totalCategories}`, status: "计划中" },
   ];
+  const activityBars = posts.slice(0, 7).map((post) => {
+    const views = Number(post.views.replace(/[^\d.]/g, "")) || 0;
+    return {
+      label: post.publishedAt.slice(5),
+      views: Math.max(8, Math.min(160, views)),
+      comments: Math.max(6, Math.min(120, post.comments * 12)),
+    };
+  });
+  const quickActions = [
+    { label: "新建文章", icon: Plus, href: "/admin/posts/new" },
+    { label: "管理文章", icon: FileText, href: "/admin/posts" },
+    { label: "管理分类", icon: Tags, href: "/admin/categories" },
+    { label: "审核评论", icon: MessageSquare, href: "/admin/comments" },
+    { label: "系统设置", icon: Settings, href: "/admin/settings" },
+  ];
 
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <AdminPageTitle title="内容运营总览" description="欢迎回来，Maurice！以下是网站的整体运营情况。" />
-        <Button variant="outline">2024-05-05 - 2024-05-12</Button>
+        <Button variant="outline" disabled>实时数据</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -48,8 +62,8 @@ export default async function AdminDashboardPage() {
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <AdminCard>
           <CardHeader className="flex-row items-center justify-between p-5">
-            <CardTitle className="text-lg tracking-normal">流量趋势</CardTitle>
-            <Button variant="outline" size="sm">近 7 天</Button>
+            <CardTitle className="text-lg tracking-normal">内容互动概览</CardTitle>
+            <Button variant="outline" size="sm" disabled>按最新文章</Button>
           </CardHeader>
           <CardContent className="p-5 pt-0">
             <div className="relative h-72 rounded-lg border border-slate-100 bg-gradient-to-b from-white to-slate-50 p-5">
@@ -58,15 +72,18 @@ export default async function AdminDashboardPage() {
                 <span className="inline-flex items-center gap-2"><i className="h-1.5 w-5 rounded-full bg-blue-400" />访客数</span>
               </div>
               <div className="flex h-full items-end gap-6 pt-12">
-                {trafficData.map((item) => (
-                  <div key={item.day} className="flex flex-1 flex-col items-center gap-3">
+                {activityBars.map((item) => (
+                  <div key={item.label} className="flex flex-1 flex-col items-center gap-3">
                     <div className="flex h-44 w-full items-end justify-center gap-2 border-b border-dashed border-slate-200">
-                      <span className="w-3 rounded-t bg-note-teal" style={{ height: `${item.views * 4}px` }} />
-                      <span className="w-3 rounded-t bg-blue-400" style={{ height: `${item.visitors * 5}px` }} />
+                      <span className="w-3 rounded-t bg-note-teal" style={{ height: `${item.views}px` }} />
+                      <span className="w-3 rounded-t bg-blue-400" style={{ height: `${item.comments}px` }} />
                     </div>
-                    <span className="text-xs text-muted-foreground">{item.day}</span>
+                    <span className="text-xs text-muted-foreground">{item.label}</span>
                   </div>
                 ))}
+                {activityBars.length === 0 ? (
+                  <div className="grid h-full flex-1 place-items-center text-sm text-muted-foreground">暂无文章数据</div>
+                ) : null}
               </div>
             </div>
           </CardContent>

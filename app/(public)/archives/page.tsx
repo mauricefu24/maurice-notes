@@ -6,13 +6,61 @@ import { MetricTile, MiniArticleCard, SidebarPanel, SurfaceCard, TagPill } from 
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { popularTags } from "@/lib/public-page-data";
 import { getArchiveYears, getBlogStats, getCategories, getPublishedPosts } from "@/services/blog-service";
+import type { Post } from "@/types/blog";
 
-export default async function ArchivesPage() {
-  const years = await getArchiveYears();
+type ArchivesPageProps = {
+  searchParams?: Promise<{ q?: string; year?: string; category?: string }>;
+};
+
+function groupPostsByYear(posts: Post[]) {
+  const yearMap = new Map<string, Map<string, Post[]>>();
+
+  for (const post of posts) {
+    const [year, month] = post.publishedAt.split("-");
+    const monthLabel = `${Number(month)} 月`;
+
+    if (!yearMap.has(year)) {
+      yearMap.set(year, new Map());
+    }
+
+    const monthMap = yearMap.get(year)!;
+    monthMap.set(monthLabel, [...(monthMap.get(monthLabel) ?? []), post]);
+  }
+
+  return Array.from(yearMap.entries())
+    .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA))
+    .map(([year, monthMap]) => ({
+      year,
+      months: Array.from(monthMap.entries()).map(([month, monthPosts]) => ({ month, posts: monthPosts })),
+    }));
+}
+
+export default async function ArchivesPage({ searchParams }: ArchivesPageProps) {
+  const params = (await searchParams) ?? {};
+  const query = String(params.q ?? "").trim();
+  const activeYear = String(params.year ?? "").trim();
+  const activeCategory = String(params.category ?? "").trim();
   const categories = await getCategories();
-  const posts = await getPublishedPosts();
+  const allPosts = await getPublishedPosts();
+  const archiveYearOptions = Array.from(new Set(allPosts.map((post) => post.publishedAt.slice(0, 4)))).sort((a, b) => Number(b) - Number(a));
+  const posts = allPosts.filter((post) => {
+    if (activeYear && post.publishedAt.slice(0, 4) !== activeYear) {
+      return false;
+    }
+
+    if (activeCategory && post.category !== activeCategory) {
+      return false;
+    }
+
+    if (query) {
+        const content = `${post.title} ${post.excerpt} ${post.content} ${post.category} ${post.author}`.toLowerCase();
+        return content.includes(query.toLowerCase());
+    }
+
+    return true;
+  });
+  const years = query || activeYear || activeCategory ? groupPostsByYear(posts) : await getArchiveYears();
   const stats = await getBlogStats();
   const archiveStats = [
     { label: "文章总数", value: `${stats.publishedPosts}` },
@@ -35,11 +83,13 @@ export default async function ArchivesPage() {
         <div className="relative mx-auto max-w-3xl space-y-5">
           <h1 className="text-[42px] font-semibold tracking-normal text-note-ink">探索知识的足迹</h1>
           <p className="text-base text-muted-foreground">通过搜索与归档，发现有价值的内容和灵感</p>
-          <div className="mx-auto flex max-w-2xl items-center gap-3 rounded-lg border bg-white p-2 shadow-sm">
+          <form action="/archives" className="mx-auto flex max-w-2xl items-center gap-3 rounded-lg border bg-white p-2 shadow-sm">
+            {activeYear ? <input type="hidden" name="year" value={activeYear} /> : null}
+            {activeCategory ? <input type="hidden" name="category" value={activeCategory} /> : null}
             <Search className="ml-3 h-5 w-5 text-muted-foreground" />
-            <Input className="h-11 border-0 px-0 focus-visible:ring-0" placeholder="搜索文章、关键词、标签或内容..." />
-            <Button className="h-11 px-8">搜索</Button>
-          </div>
+            <Input name="q" defaultValue={query} className="h-11 border-0 px-0 focus-visible:ring-0" placeholder="搜索文章、关键词、分类或内容..." />
+            <Button type="submit" className="h-11 px-8">搜索</Button>
+          </form>
           <div className="mx-auto grid max-w-2xl grid-cols-4 gap-4 pt-2">
             {archiveStats.map((stat) => (
               <div key={stat.label} className="border-r last:border-r-0">
@@ -54,17 +104,32 @@ export default async function ArchivesPage() {
       <SurfaceCard>
         <CardContent className="flex flex-wrap items-center gap-4 p-4 text-sm">
           <span className="font-medium text-note-ink">筛选条件：</span>
-          <Button variant="outline" className="gap-8">全部年份 <ChevronDown className="h-4 w-4" /></Button>
-          <Button variant="outline" className="gap-8">全部分类 <ChevronDown className="h-4 w-4" /></Button>
-          <Button variant="outline" className="gap-8">选择标签 <ChevronDown className="h-4 w-4" /></Button>
-          <Button variant="outline" className="ml-auto">清空筛选</Button>
+          <form action="/archives" className="flex flex-1 flex-wrap items-center gap-3">
+            {query ? <input type="hidden" name="q" value={query} /> : null}
+            <select name="year" defaultValue={activeYear} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-muted-foreground">
+              <option value="">全部年份</option>
+              {archiveYearOptions.map((year) => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+            <select name="category" defaultValue={activeCategory} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-muted-foreground">
+              <option value="">全部分类</option>
+              {categories.map((category) => (
+                <option key={category.slug} value={category.name}>{category.name}</option>
+              ))}
+            </select>
+            <Button type="submit" variant="outline">应用筛选</Button>
+            <Button asChild variant="ghost" className="ml-auto">
+              <Link href="/archives">清空筛选</Link>
+            </Button>
+          </form>
         </CardContent>
       </SurfaceCard>
 
       <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_320px]">
         <main className="space-y-8">
           <div className="relative space-y-8 border-l border-slate-200 pl-8">
-            {years.map((year, yearIndex) => (
+            {years.length ? years.map((year, yearIndex) => (
               <section key={year.year} className="relative space-y-5">
                 <span className="absolute -left-[41px] top-1 h-4 w-4 rounded-full border-4 border-white bg-note-teal shadow" />
                 <div className="flex items-center gap-4">
@@ -111,7 +176,9 @@ export default async function ArchivesPage() {
                   </div>
                 ) : null}
               </section>
-            ))}
+            )) : (
+              <p className="text-sm text-muted-foreground">没有找到匹配的归档文章。</p>
+            )}
           </div>
 
           <SurfaceCard>
@@ -167,10 +234,10 @@ export default async function ArchivesPage() {
           </SidebarPanel>
           <SidebarPanel title="热门关键词">
             <div className="flex flex-wrap gap-2">
-              {popularTags.slice(0, 8).map((tag, index) => (
-                <span key={tag} className="inline-flex items-center gap-1 rounded-md bg-note-mint px-2.5 py-1 text-xs text-note-teal">
+              {categories.slice(0, 8).map((category) => (
+                <span key={category.slug} className="inline-flex items-center gap-1 rounded-md bg-note-mint px-2.5 py-1 text-xs text-note-teal">
                   <Tag className="h-3 w-3" />
-                  {tag} {index + 5}
+                  {category.name} {category.postCount}
                 </span>
               ))}
             </div>

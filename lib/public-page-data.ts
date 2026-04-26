@@ -1,58 +1,5 @@
 import { ChartNoAxesColumn, Compass, Heart, Layers3, Link2, PenLine, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 
-export const tableOfContents = [
-  { id: "why-design-system", title: "为什么需要设计系统" },
-  { id: "core-steps", title: "从 0 到 1：核心步骤" },
-  { id: "language-definition", title: "设计语言定义" },
-  { id: "implementation", title: "落地与持续迭代" },
-  { id: "comments", title: "评论讨论" },
-];
-
-export const articleComments = [
-  {
-    name: "张小明",
-    time: "2 小时前",
-    body: "写得很清晰，尤其是把组件边界和设计规则分开讲的部分，对我现在的项目很有帮助。",
-    likes: 12,
-  },
-  {
-    name: "Lily",
-    time: "5 小时前",
-    body: "同意先建立命名和 token 体系，再推进组件化，否则越做越乱。",
-    likes: 6,
-  },
-  {
-    name: "Moon",
-    time: "昨天 18:03",
-    body: "期待后续能分享一篇关于设计系统治理和版本迭代的文章。",
-    likes: 4,
-  },
-];
-
-export const popularTags = ["前端开发", "产品设计", "用户体验", "设计系统", "增长", "效率工具", "知识管理", "AI 工具", "B 端设计", "个人成长"];
-
-export const recommendedAuthors = [
-  { name: "Maurice", role: "产品设计师 & 独立开发者", count: "128 篇文章" },
-  { name: "Lily", role: "设计师 & 知识管理爱好者", count: "56 篇文章" },
-  { name: "Moon", role: "前端工程师 & 技术博主", count: "44 篇文章" },
-  { name: "张小明", role: "产品经理 & 思考者", count: "38 篇文章" },
-];
-
-export const archiveStats = [
-  { label: "文章总数", value: "128" },
-  { label: "分类数量", value: "6" },
-  { label: "标签数量", value: "86" },
-  { label: "累计阅读", value: "128.6K" },
-];
-
-export const archiveYears = [
-  { year: "2024", count: 38 },
-  { year: "2023", count: 32 },
-  { year: "2022", count: 28 },
-  { year: "2021", count: 18 },
-  { year: "2020", count: 12 },
-];
-
 export const experience = [
   {
     years: "2013 - 2015",
@@ -127,17 +74,9 @@ export const values = [
   { title: "长期主义", body: "专注长期价值，做真正重要的事。", icon: ShieldCheck },
 ];
 
-export const aboutStats = [
-  { label: "发布文章", value: "128+" },
-  { label: "订阅读者", value: "3.2K+" },
-  { label: "个人项目", value: "18+" },
-  { label: "主题分享", value: "12+" },
-  { label: "行业经验", value: "10+" },
-];
-
 export const aboutFaqs = [
   { question: "你主要写什么内容？", answer: "产品、技术、数字化转型、数据分析、AI 应用与个人成长。" },
-  { question: "如何订阅你的文章？", answer: "可以在首页订阅我的周刊，也可以关注我的社交媒体账号。" },
+  { question: "如何持续关注你的内容？", answer: "可以通过文章页、分类页和归档页浏览最新内容，也欢迎通过联系方式交流。" },
   { question: "是否接受访谈或合作？", answer: "是的，欢迎通过邮箱或社交账号联系我，进一步交流。" },
 ];
 
@@ -148,16 +87,3 @@ export const aboutContact = [
   "MauriceNotes",
   "深圳，中国",
 ];
-
-export const codeSample = `const designSystem = {
-  color: {
-    primary: "#008577",
-    success: "#22c55e",
-    warning: "#f59e0b",
-    danger: "#ef4444",
-  },
-  radius: 8,
-  spacing: 4,
-};`;
-
-export const categoryTabs = ["全部", "技术", "产品", "设计", "生活", "AI"];

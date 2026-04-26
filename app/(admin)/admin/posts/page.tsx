@@ -3,18 +3,17 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { deletePost, updatePostStatus } from "@/app/(admin)/admin/posts/actions";
-import { AdminCard, AdminFilterBar, AdminPageTitle, AdminSearchInput, AdminStatCard, AdminStatusBadge, MiniPostRank, QuickActionRow, SelectLike, SidePanel } from "@/components/admin/admin-blocks";
+import { AdminCard, AdminFilterBar, AdminPageTitle, AdminSearchInput, AdminStatCard, AdminStatusBadge, MiniPostRank, QuickActionRow, SidePanel } from "@/components/admin/admin-blocks";
 import { ConfirmSubmitButton } from "@/components/admin/confirm-submit-button";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { contentHealth } from "@/lib/admin-data";
 import { getPostStatusLabel } from "@/lib/status-labels";
 import { getAllPosts, getBlogStats } from "@/services/blog-service";
 import type { PostStatus } from "@/types/blog";
 
 type AdminPostsPageProps = {
-  searchParams?: Promise<{ status?: string }>;
+  searchParams?: Promise<{ status?: string; q?: string; category?: string; author?: string; date?: string }>;
 };
 
 const statusFilters: Array<{ label: string; value: "all" | PostStatus }> = [
@@ -27,9 +26,41 @@ const statusFilters: Array<{ label: string; value: "all" | PostStatus }> = [
 export default async function AdminPostsPage({ searchParams }: AdminPostsPageProps) {
   const params = (await searchParams) ?? {};
   const activeStatus = statusFilters.some((item) => item.value === params.status) ? params.status : "all";
+  const query = String(params.q ?? "").trim();
+  const activeCategory = String(params.category ?? "").trim();
+  const activeAuthor = String(params.author ?? "").trim();
+  const activeDate = String(params.date ?? "").trim();
   const allPosts = await getAllPosts();
   const stats = await getBlogStats();
-  const posts = activeStatus === "all" ? allPosts : allPosts.filter((post) => post.status === activeStatus);
+  const categories = Array.from(new Set(allPosts.map((post) => post.category))).sort();
+  const authors = Array.from(new Set(allPosts.map((post) => post.author))).sort();
+  const statusMatchedPosts = activeStatus === "all" ? allPosts : allPosts.filter((post) => post.status === activeStatus);
+  const posts = statusMatchedPosts.filter((post) => {
+    if (activeCategory && post.category !== activeCategory) {
+      return false;
+    }
+
+    if (activeAuthor && post.author !== activeAuthor) {
+      return false;
+    }
+
+    if (activeDate && post.publishedAt !== activeDate) {
+      return false;
+    }
+
+    if (query) {
+        const content = `${post.title} ${post.excerpt} ${post.content} ${post.category} ${post.author}`.toLowerCase();
+        return content.includes(query.toLowerCase());
+    }
+
+    return true;
+  });
+  const preservedFilters = new URLSearchParams();
+
+  if (query) preservedFilters.set("q", query);
+  if (activeCategory) preservedFilters.set("category", activeCategory);
+  if (activeAuthor) preservedFilters.set("author", activeAuthor);
+  if (activeDate) preservedFilters.set("date", activeDate);
   const counts = {
     all: allPosts.length,
     published: allPosts.filter((post) => post.status === "published").length,
@@ -43,6 +74,12 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
     { label: "审核中", value: `${stats.reviewPosts}`, delta: "实时数据", icon: CalendarCheck, tone: "bg-amber-50 text-amber-700" },
     { label: "总浏览量", value: stats.totalViewsLabel, delta: "文章累计", icon: Eye, tone: "bg-blue-50 text-blue-700" },
     { label: "总评论数", value: `${stats.totalComments}`, delta: `${stats.pendingComments} 待审核`, icon: MessageSquare, tone: "bg-violet-50 text-violet-700" },
+  ];
+  const averageComments = stats.totalPosts ? (stats.totalPostComments / stats.totalPosts).toFixed(1) : "0";
+  const contentInsights = [
+    { label: "平均评论数", value: averageComments, hint: "基于文章评论字段" },
+    { label: "精选文章", value: `${allPosts.filter((post) => post.featured).length}`, hint: "当前已标记精选" },
+    { label: "已发布占比", value: stats.totalPosts ? `${Math.round((stats.publishedPosts / stats.totalPosts) * 100)}%` : "0%", hint: "已发布 / 全部文章" },
   ];
 
   return (
@@ -64,13 +101,35 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
       </div>
 
       <AdminFilterBar>
-        <div className="flex min-w-[280px] flex-1 items-center gap-2 rounded-md border border-slate-200 px-3">
+        <form action="/admin/posts" className="flex min-w-[280px] flex-1 items-center gap-2 rounded-md border border-slate-200 px-3">
+          {activeStatus !== "all" ? <input type="hidden" name="status" value={activeStatus} /> : null}
           <Search className="h-4 w-4 text-muted-foreground" />
-          <AdminSearchInput placeholder="搜索文章标题、内容或标签..." />
-        </div>
-        <SelectLike label="所有分类" />
-        <SelectLike label="所有作者" />
-        <SelectLike label="选择日期范围" />
+          <AdminSearchInput name="q" defaultValue={query} placeholder="搜索文章标题、内容、分类或作者..." />
+          <Button type="submit" size="sm">搜索</Button>
+        </form>
+        <form action="/admin/posts" className="flex flex-wrap items-center gap-2">
+          {activeStatus !== "all" ? <input type="hidden" name="status" value={activeStatus} /> : null}
+          {query ? <input type="hidden" name="q" value={query} /> : null}
+          <select name="category" defaultValue={activeCategory} className="h-11 rounded-md border border-slate-200 bg-white px-3 text-sm text-muted-foreground">
+            <option value="">所有分类</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+          <select name="author" defaultValue={activeAuthor} className="h-11 rounded-md border border-slate-200 bg-white px-3 text-sm text-muted-foreground">
+            <option value="">所有作者</option>
+            {authors.map((author) => (
+              <option key={author} value={author}>{author}</option>
+            ))}
+          </select>
+          <input name="date" type="date" defaultValue={activeDate} className="h-11 rounded-md border border-slate-200 bg-white px-3 text-sm text-muted-foreground" />
+          <Button type="submit" variant="outline" className="h-11">筛选</Button>
+          {query || activeCategory || activeAuthor || activeDate ? (
+            <Button asChild variant="ghost" className="h-11">
+              <Link href={activeStatus === "all" ? "/admin/posts" : `/admin/posts?status=${activeStatus}`}>清除</Link>
+            </Button>
+          ) : null}
+        </form>
         <Button asChild className="h-11 gap-2">
           <Link href="/admin/posts/new">
             <Plus className="h-4 w-4" />
@@ -91,7 +150,9 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
                     asChild
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-note-teal data-[state=active]:shadow-none"
                   >
-                    <Link href={filter.value === "all" ? "/admin/posts" : `/admin/posts?status=${filter.value}`}>
+                    <Link
+                      href={`${filter.value === "all" ? "/admin/posts" : `/admin/posts?status=${filter.value}`}${preservedFilters.toString() ? `${filter.value === "all" ? "?" : "&"}${preservedFilters.toString()}` : ""}`}
+                    >
                       {filter.label} {counts[filter.value]}
                     </Link>
                   </TabsTrigger>
@@ -139,7 +200,7 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
                       </td>
                       <td className="px-4 py-4"><span className="rounded-md bg-note-mint px-2 py-1 text-xs text-note-teal">{post.category}</span></td>
                       <td className="px-4 py-4"><AdminStatusBadge status={getPostStatusLabel(post.status)} /></td>
-                      <td className="px-4 py-4 text-muted-foreground">{post.publishedAt}<br /><span className="text-xs">10:30</span></td>
+                      <td className="px-4 py-4 text-muted-foreground">{post.publishedAt}</td>
                       <td className="px-4 py-4">{post.views}</td>
                       <td className="px-4 py-4">{post.comments || "-"}</td>
                       <td className="px-4 py-4">
@@ -216,12 +277,12 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
 
           <SidePanel title="内容洞察">
             <div className="space-y-5">
-              {contentHealth.map((item) => (
+              {contentInsights.map((item) => (
                 <div key={item.label} className="border-b border-slate-100 pb-4 last:border-b-0 last:pb-0">
                   <p className="text-sm text-muted-foreground">{item.label}</p>
                   <div className="mt-1 flex items-end justify-between">
                     <p className="text-2xl font-semibold text-note-ink">{item.value}</p>
-                    <p className="text-xs font-medium text-emerald-600">较上周 {item.delta}</p>
+                    <p className="text-xs font-medium text-emerald-600">{item.hint}</p>
                   </div>
                 </div>
               ))}
@@ -232,9 +293,8 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
             <div className="space-y-3">
               <QuickActionRow label="新建文章" icon={Plus} href="/admin/posts/new" />
               <QuickActionRow label="文章分类" icon={Tags} href="/admin/categories" />
-              <QuickActionRow label="标签管理" icon={Tags} href="/admin/categories" />
-              <QuickActionRow label="草稿箱" icon={Edit3} href="/admin/posts" />
-              <QuickActionRow label="回收站" icon={Trash2} href="/admin/posts" />
+              <QuickActionRow label="草稿箱" icon={Edit3} href="/admin/posts?status=draft" />
+              <QuickActionRow label="审核中" icon={CalendarCheck} href="/admin/posts?status=review" />
             </div>
           </SidePanel>
         </aside>

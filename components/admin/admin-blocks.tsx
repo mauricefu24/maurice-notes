@@ -80,16 +80,24 @@ export function AdminFilterBar({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function AdminSearchInput({ placeholder }: { placeholder: string }) {
+export function AdminSearchInput({
+  placeholder,
+  name,
+  defaultValue,
+}: {
+  placeholder: string;
+  name?: string;
+  defaultValue?: string;
+}) {
   return (
     <div className="min-w-[280px] flex-1">
-      <Input className="h-11" placeholder={placeholder} />
+      <Input name={name} defaultValue={defaultValue} className="h-11" placeholder={placeholder} />
     </div>
   );
 }
 
-export function SelectLike({ label }: { label: string }) {
-  return <Button variant="outline" className="h-11 min-w-[128px] justify-between text-muted-foreground">{label}</Button>;
+export function SelectLike({ label, disabled = true }: { label: string; disabled?: boolean }) {
+  return <Button type="button" variant="outline" className="h-11 min-w-[128px] justify-between text-muted-foreground" disabled={disabled}>{label}</Button>;
 }
 
 export function SidePanel({ title, children }: { title: string; children: React.ReactNode }) {

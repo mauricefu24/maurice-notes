@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import type { SiteSettings } from "@/types/blog";
@@ -35,4 +36,5 @@ export async function saveSiteSettings(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/about");
   revalidatePath("/admin/settings");
+  redirect("/admin/settings?success=%E8%AE%BE%E7%BD%AE%E5%B7%B2%E4%BF%9D%E5%AD%98");
 }

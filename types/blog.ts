@@ -21,6 +21,8 @@ export type Post = {
   readingTime: string;
   views: string;
   comments: number;
+  likes: number;
+  tags: string[];
   image: string;
   featured?: boolean;
 };

@@ -26,6 +26,8 @@ model Post {
   readingTime String   @default("6 分钟阅读")
   views       String   @default("0")
   comments    Int      @default(0)
+  likes       Int      @default(0)
+  tags        String[] @default([])
   image       String
   featured    Boolean  @default(false)
   createdAt   DateTime @default(now())

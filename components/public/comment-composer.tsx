@@ -1,40 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { CommentFormState } from "@/app/(public)/articles/[slug]/actions";
 
-export function CommentComposer() {
-  const [value, setValue] = useState("");
-  const [message, setMessage] = useState("");
+type CommentComposerProps = {
+  action: (state: CommentFormState, formData: FormData) => Promise<CommentFormState>;
+};
 
-  function submitComment() {
-    const content = value.trim();
+const initialState: CommentFormState = { ok: false, message: "" };
 
-    if (!content) {
-      setMessage("请先写下评论内容");
-      return;
+export function CommentComposer({ action }: CommentComposerProps) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [state, formAction, pending] = useActionState(action, initialState);
+
+  useEffect(() => {
+    if (state.ok) {
+      formRef.current?.reset();
     }
-
-    setValue("");
-    setMessage("评论已提交，等待审核");
-  }
+  }, [state.ok]);
 
   return (
-    <div className="space-y-2">
-      <div className="flex gap-3">
+    <form ref={formRef} action={formAction} className="space-y-2">
+      <div className="grid gap-3 sm:grid-cols-[180px_1fr_auto]">
         <Input
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
+          name="author"
+          placeholder="你的昵称"
+          className="h-11"
+          maxLength={40}
+        />
+        <Input
+          name="body"
           placeholder="写下你的评论..."
           className="h-11"
+          maxLength={1000}
+          required
         />
-        <Button type="button" className="h-11 px-6" onClick={submitComment}>
-          发表评论
+        <Button type="submit" className="h-11 px-6" disabled={pending}>
+          {pending ? "提交中" : "发表评论"}
         </Button>
       </div>
-      {message ? <p className="text-sm text-note-teal">{message}</p> : null}
-    </div>
+      {state.message ? (
+        <p className={state.ok ? "text-sm text-note-teal" : "text-sm text-red-600"}>{state.message}</p>
+      ) : null}
+    </form>
   );
 }

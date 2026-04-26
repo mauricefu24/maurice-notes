@@ -2,18 +2,31 @@ import { Plus, Trash2 } from "lucide-react";
 
 import { createCategory, deleteCategory } from "@/app/(admin)/admin/categories/actions";
 import { AdminCard, AdminPageTitle } from "@/components/admin/admin-blocks";
+import { ConfirmSubmitButton } from "@/components/admin/confirm-submit-button";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getCategories } from "@/services/blog-service";
 
-export default async function AdminCategoriesPage() {
+type AdminCategoriesPageProps = {
+  searchParams?: Promise<{ error?: string; success?: string }>;
+};
+
+export default async function AdminCategoriesPage({ searchParams }: AdminCategoriesPageProps) {
+  const params = (await searchParams) ?? {};
   const categories = await getCategories();
 
   return (
     <div className="space-y-8">
       <AdminPageTitle title="分类管理" description="维护文章分类、别名与展示说明，分类数据会同步影响前台导航与归档。" />
+
+      {params.error ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{params.error}</div>
+      ) : null}
+      {params.success ? (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{params.success}</div>
+      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <AdminCard>
@@ -40,9 +53,16 @@ export default async function AdminCategoriesPage() {
                       <td className="max-w-md px-4 py-4 text-muted-foreground">{category.description}</td>
                       <td className="px-4 py-4">
                         <form action={deleteCategory.bind(null, category.slug)}>
-                          <Button type="submit" variant="ghost" size="icon" aria-label="删除分类" className="text-red-600">
+                          <ConfirmSubmitButton
+                            message={`确认删除分类「${category.name}」吗？此操作不可撤销。`}
+                            variant="ghost"
+                            size="icon"
+                            aria-label={category.postCount > 0 ? "分类下仍有文章，不能删除" : "删除分类"}
+                            className="text-red-600"
+                            disabled={category.postCount > 0}
+                          >
                             <Trash2 className="h-4 w-4" />
-                          </Button>
+                          </ConfirmSubmitButton>
                         </form>
                       </td>
                     </tr>

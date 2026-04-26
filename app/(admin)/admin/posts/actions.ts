@@ -21,6 +21,18 @@ function slugify(input: string) {
     .slice(0, 80);
 }
 
+function tagList(input: string) {
+  return input
+    .split(/[,，\s]+/)
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+    .slice(0, 12);
+}
+
+function flashParam(kind: "success" | "error", message: string) {
+  return `${kind}=${encodeURIComponent(message)}`;
+}
+
 function postPayload(formData: FormData, forcedStatus?: "published" | "draft" | "review") {
   const title = value(formData, "title");
   const excerpt = value(formData, "excerpt");
@@ -30,25 +42,28 @@ function postPayload(formData: FormData, forcedStatus?: "published" | "draft" | 
   const status = forcedStatus ?? value(formData, "status") ?? "draft";
 
   if (!title) {
-    throw new Error("文章标题不能为空");
+    return { error: "文章标题不能为空" };
   }
 
   if (!slug) {
-    throw new Error("URL 别名不能为空");
+    return { error: "URL 别名不能为空" };
   }
 
   return {
-    title,
-    slug,
-    excerpt: excerpt || title,
-    content: content || excerpt || title,
-    category: value(formData, "category") || "技术",
-    status,
-    author: value(formData, "author") || "Maurice",
-    publishedAt: new Date(value(formData, "publishedAt") || new Date()),
-    readingTime: value(formData, "readingTime") || "6 分钟阅读",
-    image: value(formData, "image") || defaultImage,
-    featured: formData.get("featured") === "on",
+    data: {
+      title,
+      slug,
+      excerpt: excerpt || title,
+      content: content || excerpt || title,
+      category: value(formData, "category") || "技术",
+      status,
+      author: value(formData, "author") || "Maurice",
+      publishedAt: new Date(value(formData, "publishedAt") || new Date()),
+      readingTime: value(formData, "readingTime") || "6 分钟阅读",
+      image: value(formData, "image") || defaultImage,
+      tags: tagList(value(formData, "tags")),
+      featured: formData.get("featured") === "on",
+    },
   };
 }
 
@@ -62,64 +77,139 @@ function revalidateBlog() {
 }
 
 export async function createPost(formData: FormData) {
+  const payload = postPayload(formData);
+
+  if (payload.error) {
+    redirect(`/admin/posts/new?${flashParam("error", payload.error)}`);
+  }
+
+  const existing = await prisma.post.findUnique({ where: { slug: payload.data!.slug } });
+
+  if (existing) {
+    redirect(`/admin/posts/new?${flashParam("error", "URL 别名已存在，请换一个")}`);
+  }
+
   const post = await prisma.post.create({
-    data: postPayload(formData),
+    data: payload.data!,
   });
 
   revalidateBlog();
-  redirect(`/admin/posts/${post.id}/edit`);
+  redirect(`/admin/posts/${post.id}/edit?${flashParam("success", "文章已保存")}`);
 }
 
 export async function createDraftPost(formData: FormData) {
+  const payload = postPayload(formData, "draft");
+
+  if (payload.error) {
+    redirect(`/admin/posts/new?${flashParam("error", payload.error)}`);
+  }
+
+  const existing = await prisma.post.findUnique({ where: { slug: payload.data!.slug } });
+
+  if (existing) {
+    redirect(`/admin/posts/new?${flashParam("error", "URL 别名已存在，请换一个")}`);
+  }
+
   const post = await prisma.post.create({
-    data: postPayload(formData, "draft"),
+    data: payload.data!,
   });
 
   revalidateBlog();
-  redirect(`/admin/posts/${post.id}/edit`);
+  redirect(`/admin/posts/${post.id}/edit?${flashParam("success", "草稿已保存")}`);
 }
 
 export async function createPublishedPost(formData: FormData) {
+  const payload = postPayload(formData, "published");
+
+  if (payload.error) {
+    redirect(`/admin/posts/new?${flashParam("error", payload.error)}`);
+  }
+
+  const existing = await prisma.post.findUnique({ where: { slug: payload.data!.slug } });
+
+  if (existing) {
+    redirect(`/admin/posts/new?${flashParam("error", "URL 别名已存在，请换一个")}`);
+  }
+
   const post = await prisma.post.create({
-    data: postPayload(formData, "published"),
+    data: payload.data!,
   });
 
   revalidateBlog();
   revalidatePath(`/articles/${post.slug}`);
-  redirect(`/admin/posts/${post.id}/edit`);
+  redirect(`/admin/posts/${post.id}/edit?${flashParam("success", "文章已发布")}`);
 }
 
 export async function updatePost(id: string, formData: FormData) {
+  const target = `/admin/posts/${id}/edit`;
+  const payload = postPayload(formData);
+
+  if (payload.error) {
+    redirect(`${target}?${flashParam("error", payload.error)}`);
+  }
+
+  const existing = await prisma.post.findUnique({ where: { slug: payload.data!.slug } });
+
+  if (existing && existing.id !== id) {
+    redirect(`${target}?${flashParam("error", "URL 别名已被其他文章使用")}`);
+  }
+
   const post = await prisma.post.update({
     where: { id },
-    data: postPayload(formData),
+    data: payload.data!,
   });
 
   revalidateBlog();
   revalidatePath(`/articles/${post.slug}`);
-  redirect(`/admin/posts/${post.id}/edit`);
+  redirect(`/admin/posts/${post.id}/edit?${flashParam("success", "文章已更新")}`);
 }
 
 export async function savePostDraft(id: string, formData: FormData) {
+  const target = `/admin/posts/${id}/edit`;
+  const payload = postPayload(formData, "draft");
+
+  if (payload.error) {
+    redirect(`${target}?${flashParam("error", payload.error)}`);
+  }
+
+  const existing = await prisma.post.findUnique({ where: { slug: payload.data!.slug } });
+
+  if (existing && existing.id !== id) {
+    redirect(`${target}?${flashParam("error", "URL 别名已被其他文章使用")}`);
+  }
+
   const post = await prisma.post.update({
     where: { id },
-    data: postPayload(formData, "draft"),
+    data: payload.data!,
   });
 
   revalidateBlog();
   revalidatePath(`/articles/${post.slug}`);
-  redirect(`/admin/posts/${post.id}/edit`);
+  redirect(`/admin/posts/${post.id}/edit?${flashParam("success", "草稿已保存")}`);
 }
 
 export async function publishPost(id: string, formData: FormData) {
+  const target = `/admin/posts/${id}/edit`;
+  const payload = postPayload(formData, "published");
+
+  if (payload.error) {
+    redirect(`${target}?${flashParam("error", payload.error)}`);
+  }
+
+  const existing = await prisma.post.findUnique({ where: { slug: payload.data!.slug } });
+
+  if (existing && existing.id !== id) {
+    redirect(`${target}?${flashParam("error", "URL 别名已被其他文章使用")}`);
+  }
+
   const post = await prisma.post.update({
     where: { id },
-    data: postPayload(formData, "published"),
+    data: payload.data!,
   });
 
   revalidateBlog();
   revalidatePath(`/articles/${post.slug}`);
-  redirect(`/admin/posts/${post.id}/edit`);
+  redirect(`/admin/posts/${post.id}/edit?${flashParam("success", "文章已发布")}`);
 }
 
 export async function updatePostStatus(id: string, status: "published" | "draft" | "review") {

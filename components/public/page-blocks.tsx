@@ -112,7 +112,9 @@ export function AuthorMiniCard({
           <p className="text-xs text-muted-foreground">{role} · {count}</p>
         </div>
       </div>
-      <Button variant="outline" size="sm">关注</Button>
+      <Button asChild variant="outline" size="sm">
+        <Link href="/about">查看</Link>
+      </Button>
     </div>
   );
 }

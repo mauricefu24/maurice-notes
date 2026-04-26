@@ -1,5 +1,6 @@
 import { AlertTriangle, Bell, Check, FileCheck2, MessageSquare, Search, Trash2, X } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { AdminCard, AdminFilterBar, AdminPageTitle, AdminSearchInput, AdminStatusBadge, CommentActionButtons, SelectLike, SidePanel } from "@/components/admin/admin-blocks";
 import { Button } from "@/components/ui/button";
@@ -8,52 +9,87 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updateCommentStatus } from "@/app/(admin)/admin/comments/actions";
 import { getCommentStatusLabel } from "@/lib/status-labels";
 import { getBlogStats, getComments } from "@/services/blog-service";
+import type { Comment } from "@/types/blog";
 
-export default async function AdminCommentsPage() {
-  const comments = await getComments();
+type AdminCommentsPageProps = {
+  searchParams?: Promise<{ status?: string; q?: string }>;
+};
+
+const statusTabs: Array<{ label: string; value: "all" | Comment["status"] }> = [
+  { label: "全部", value: "all" },
+  { label: "待审核", value: "pending" },
+  { label: "已通过", value: "approved" },
+  { label: "垃圾评论", value: "spam" },
+  { label: "已删除", value: "deleted" },
+];
+
+export default async function AdminCommentsPage({ searchParams }: AdminCommentsPageProps) {
+  const params = (await searchParams) ?? {};
+  const activeStatus = statusTabs.some((item) => item.value === params.status) ? params.status : "all";
+  const query = String(params.q ?? "").trim();
+  const allComments = await getComments();
   const stats = await getBlogStats();
+  const statusMatchedComments = activeStatus === "all" ? allComments : allComments.filter((comment) => comment.status === activeStatus);
+  const comments = query
+    ? statusMatchedComments.filter((comment) => {
+        const content = `${comment.author} ${comment.body} ${comment.postTitle}`.toLowerCase();
+        return content.includes(query.toLowerCase());
+      })
+    : statusMatchedComments;
+  const counts = {
+    all: stats.totalComments,
+    pending: stats.pendingComments,
+    approved: stats.approvedComments,
+    spam: stats.spamComments,
+    deleted: stats.deletedComments,
+  };
   const commentOverview = [
     { label: "总评论数", value: `${stats.totalComments}`, icon: MessageSquare, tone: "bg-blue-50 text-blue-700" },
     { label: "待审核", value: `${stats.pendingComments}`, icon: Bell, tone: "bg-orange-50 text-orange-700" },
     { label: "已通过", value: `${stats.approvedComments}`, icon: FileCheck2, tone: "bg-emerald-50 text-emerald-700" },
     { label: "垃圾评论", value: `${stats.spamComments}`, icon: Trash2, tone: "bg-rose-50 text-rose-700" },
   ];
-  const tabs = [
-    `全部 ${stats.totalComments}`,
-    `待审核 ${stats.pendingComments}`,
-    `已通过 ${stats.approvedComments}`,
-    `垃圾评论 ${stats.spamComments}`,
-    `已删除 ${stats.deletedComments}`,
-  ];
 
   return (
     <div className="space-y-8">
       <AdminPageTitle title="评论管理" description="管理和审核网站上的评论，确保内容质量与社区友好。" />
 
-      <Tabs defaultValue="all">
+      <Tabs value={activeStatus}>
         <TabsList className="h-auto gap-7 border-b bg-transparent p-0">
-          {tabs.map((tab, index) => (
+          {statusTabs.map((tab) => (
             <TabsTrigger
-              key={tab}
-              value={`tab-${index}`}
+              key={tab.value}
+              value={tab.value}
+              asChild
               className="rounded-none border-b-2 border-transparent px-0 pb-4 data-[state=active]:border-note-teal data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
-              {tab}
+              <Link href={`${tab.value === "all" ? "/admin/comments" : `/admin/comments?status=${tab.value}`}${query ? `${tab.value === "all" ? "?" : "&"}q=${encodeURIComponent(query)}` : ""}`}>
+                {tab.label} {counts[tab.value]}
+              </Link>
             </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
 
       <AdminFilterBar>
-        <div className="flex min-w-[320px] flex-1 items-center gap-2 rounded-md border border-slate-200 px-3">
+        <form action="/admin/comments" className="flex min-w-[320px] flex-1 items-center gap-2 rounded-md border border-slate-200 px-3">
+          {activeStatus !== "all" ? <input type="hidden" name="status" value={activeStatus} /> : null}
           <Search className="h-4 w-4 text-muted-foreground" />
-          <AdminSearchInput placeholder="搜索评论内容、用户或文章..." />
-        </div>
+          <AdminSearchInput name="q" defaultValue={query} placeholder="搜索评论内容、用户或文章..." />
+          <Button type="submit" size="sm">搜索</Button>
+          {query ? (
+            <Button asChild variant="ghost" size="sm">
+              <Link href={activeStatus === "all" ? "/admin/comments" : `/admin/comments?status=${activeStatus}`}>清除</Link>
+            </Button>
+          ) : null}
+        </form>
         <SelectLike label="所有文章" />
         <SelectLike label="所有状态" />
         <SelectLike label="所有时间" />
         <SelectLike label="更多筛选" />
-        <Button variant="outline">重置</Button>
+        <Button asChild variant="outline">
+          <Link href="/admin/comments">重置</Link>
+        </Button>
       </AdminFilterBar>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
@@ -63,11 +99,11 @@ export default async function AdminCommentsPage() {
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <input type="checkbox" aria-label="全选评论" />
                 <span>已选择 0 项</span>
-                <Button variant="outline" size="sm" className="text-emerald-700"><Check className="mr-1 h-4 w-4" />批量通过</Button>
-                <Button variant="outline" size="sm" className="text-red-600"><X className="mr-1 h-4 w-4" />批量拒绝</Button>
-                <SelectLike label="更多操作" />
+                <Button variant="outline" size="sm" className="text-emerald-700" disabled><Check className="mr-1 h-4 w-4" />批量通过</Button>
+                <Button variant="outline" size="sm" className="text-red-600" disabled><X className="mr-1 h-4 w-4" />批量拒绝</Button>
+                <Button variant="outline" size="sm" disabled>更多操作</Button>
               </div>
-              <SelectLike label="最新评论" />
+              <Button variant="outline" size="sm" disabled>最新评论</Button>
             </div>
 
             <div className="divide-y divide-slate-100">
@@ -103,13 +139,9 @@ export default async function AdminCommentsPage() {
             <div className="flex items-center justify-between border-t pt-4 text-sm text-muted-foreground">
               <span>共 {comments.length} 条评论</span>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">上一页</Button>
+                <Button variant="outline" size="sm" disabled>上一页</Button>
                 <Button size="sm">1</Button>
-                <Button variant="ghost" size="sm">2</Button>
-                <Button variant="ghost" size="sm">3</Button>
-                <Button variant="ghost" size="sm">...</Button>
-                <Button variant="ghost" size="sm">63</Button>
-                <Button variant="outline" size="sm">下一页</Button>
+                <Button variant="outline" size="sm" disabled>下一页</Button>
               </div>
             </div>
           </CardContent>
@@ -132,15 +164,29 @@ export default async function AdminCommentsPage() {
               })}
             </div>
           </SidePanel>
-          <SidePanel title="垃圾评论趋势">
-            <div className="h-48 rounded-lg border border-slate-100 bg-gradient-to-b from-white to-slate-50 p-4">
-              <div className="flex h-full items-end gap-3">
-                {[50, 38, 48, 34, 61, 49].map((value, index) => (
-                  <div key={index} className="flex flex-1 flex-col items-center gap-2">
-                    <span className="w-3 rounded-t bg-rose-400" style={{ height: `${value * 1.9}px` }} />
-                    <span className="text-xs text-muted-foreground">05-{index + 6}</span>
+          <SidePanel title="审核状态分布">
+            <div className="space-y-3 text-sm">
+              {[
+                { label: "待审核", value: stats.pendingComments, tone: "bg-amber-400" },
+                { label: "已通过", value: stats.approvedComments, tone: "bg-emerald-500" },
+                { label: "垃圾评论", value: stats.spamComments, tone: "bg-rose-500" },
+                { label: "已删除", value: stats.deletedComments, tone: "bg-slate-400" },
+              ].map((item) => (
+                <div key={item.label} className="space-y-1">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>{item.label}</span>
+                    <span>{item.value}</span>
                   </div>
-                ))}
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className={`h-full ${item.tone}`}
+                      style={{ width: `${stats.totalComments ? Math.round((item.value / stats.totalComments) * 100) : 0}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+              <div className="rounded-lg bg-slate-50 p-3 text-xs leading-5 text-muted-foreground">
+                当前系统尚未接入按天评论趋势埋点，这里仅展示数据库中的实时状态分布。
               </div>
             </div>
           </SidePanel>

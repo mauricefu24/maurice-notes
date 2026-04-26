@@ -5,15 +5,21 @@ import { ArticleCard } from "@/components/public/article-card";
 import { AuthorMiniCard, BlockHeading, SidebarPanel, SurfaceCard, TagPill } from "@/components/public/page-blocks";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
-import { categoryTabs, popularTags, recommendedAuthors } from "@/lib/public-page-data";
 import { getBlogStats, getCategories, getPublishedPosts } from "@/services/blog-service";
-import { NewsletterSignup } from "@/components/public/newsletter-signup";
 
 export default async function CategoriesPage() {
   const categories = await getCategories();
   const posts = await getPublishedPosts();
   const stats = await getBlogStats();
-  const featuredCategory = categories[1];
+  const featuredCategory = categories[0] ?? {
+    name: "暂无分类",
+    description: "创建分类后会在这里展示推荐分类。",
+    postCount: 0,
+    slug: "empty",
+    accent: "bg-slate-50 text-slate-600",
+  };
+  const categoryTabs = ["全部", ...categories.map((category) => category.name)];
+  const authors = Array.from(new Set(posts.map((post) => post.author))).slice(0, 4);
 
   return (
     <div className="page-shell space-y-8 py-8">
@@ -36,16 +42,16 @@ export default async function CategoriesPage() {
               <div className="absolute left-1/2 top-1/2 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-2xl bg-note-teal text-white shadow-soft">
                 <Box className="h-9 w-9" />
               </div>
-              {["技术", "生活", "产品", "设计", "电商"].map((label, index) => (
+              {categories.slice(0, 5).map((category, index) => (
                 <span
-                  key={label}
+                  key={category.slug}
                   className="absolute rounded-md bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm"
                   style={{
                     left: `${18 + (index % 3) * 28}%`,
                     top: `${18 + Math.floor(index / 3) * 42}%`,
                   }}
                 >
-                  {label}
+                  {category.name}
                 </span>
               ))}
             </div>
@@ -80,6 +86,7 @@ export default async function CategoriesPage() {
 
           {categories.slice(0, 3).map((category, index) => {
             const Icon = index === 0 ? Code2 : index === 1 ? Box : PenTool;
+            const categoryPosts = posts.filter((post) => post.category === category.name).slice(0, 3);
             return (
               <section key={category.slug} className="space-y-5">
                 <BlockHeading
@@ -91,9 +98,13 @@ export default async function CategoriesPage() {
                   <span className="text-sm text-muted-foreground">{category.description}</span>
                 </div>
                 <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                  {posts.slice(index, index + 3).map((post) => (
-                    <ArticleCard key={`${category.slug}-${post.id}`} post={{ ...post, category: category.name }} />
-                  ))}
+                  {categoryPosts.length ? (
+                    categoryPosts.map((post) => (
+                      <ArticleCard key={`${category.slug}-${post.id}`} post={post} />
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">该分类下暂无已发布文章。</p>
+                  )}
                 </div>
               </section>
             );
@@ -103,24 +114,31 @@ export default async function CategoriesPage() {
         <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
           <SidebarPanel title="热门标签">
             <div className="flex flex-wrap gap-2">
-              {popularTags.map((tag) => (
-                <span key={tag} className="rounded-md bg-slate-50 px-3 py-1.5 text-sm text-slate-600">
-                  {tag} <span className="ml-1 text-xs text-muted-foreground">{posts.length}</span>
+              {categories.map((category) => (
+                <span key={category.slug} className="rounded-md bg-slate-50 px-3 py-1.5 text-sm text-slate-600">
+                  {category.name} <span className="ml-1 text-xs text-muted-foreground">{category.postCount}</span>
                 </span>
               ))}
             </div>
           </SidebarPanel>
           <SidebarPanel title="推荐作者">
             <div className="space-y-3">
-              {recommendedAuthors.map((author) => (
-                <AuthorMiniCard key={author.name} {...author} />
+              {authors.map((author) => (
+                <AuthorMiniCard
+                  key={author}
+                  name={author}
+                  role="本站作者"
+                  count={`${posts.filter((post) => post.author === author).length} 篇文章`}
+                />
               ))}
             </div>
           </SidebarPanel>
-          <SidebarPanel title="订阅精选内容">
+          <SidebarPanel title="继续探索">
             <div className="space-y-4">
-              <p className="text-sm leading-6 text-muted-foreground">每周一封精选内容，发现和灵感不错过任何更新。</p>
-              <NewsletterSignup />
+              <p className="text-sm leading-6 text-muted-foreground">按时间线浏览全部已发布文章，快速找到感兴趣的主题。</p>
+              <Button asChild className="w-full">
+                <Link href="/archives">查看归档</Link>
+              </Button>
             </div>
           </SidebarPanel>
         </aside>

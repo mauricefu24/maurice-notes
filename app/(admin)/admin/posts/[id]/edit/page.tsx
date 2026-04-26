@@ -5,10 +5,12 @@ import { notFound } from "next/navigation";
 
 type EditPostPageProps = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ error?: string; success?: string }>;
 };
 
-export default async function EditPostPage({ params }: EditPostPageProps) {
+export default async function EditPostPage({ params, searchParams }: EditPostPageProps) {
   const { id } = await params;
+  const query = (await searchParams) ?? {};
   const post = await getPostById(id);
 
   if (!post) {
@@ -22,6 +24,8 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
       publishAction={publishPost.bind(null, id)}
       mode="edit"
       post={post}
+      error={query.error}
+      success={query.success}
     />
   );
 }

@@ -1,4 +1,4 @@
-import { Calendar, Check, Clock, History, ImageIcon, Link2, Save, Undo2 } from "lucide-react";
+import { Calendar, Check, Clock, History, ImageIcon, Link2, Save } from "lucide-react";
 import Image from "next/image";
 
 import { AdminCard, AdminPageTitle, EditorInput } from "@/components/admin/admin-blocks";
@@ -6,18 +6,20 @@ import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { editorCategories } from "@/lib/admin-data";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import type { Post } from "@/types/blog";
 
 type PostEditorScreenProps = {
   mode: "new" | "edit";
   post?: Post;
+  error?: string;
+  success?: string;
   action: (formData: FormData) => void | Promise<void>;
   draftAction: (formData: FormData) => void | Promise<void>;
   publishAction: (formData: FormData) => void | Promise<void>;
 };
 
-export function PostEditorScreen({ mode, post, action, draftAction, publishAction }: PostEditorScreenProps) {
+export function PostEditorScreen({ mode, post, error, success, action, draftAction, publishAction }: PostEditorScreenProps) {
   const title = post?.title ?? "通过文字与代码，探索更大的世界";
   const excerpt =
     post?.excerpt ?? "这里是 Maurice 的数字花园，记录技术、产品、设计与生活中的思考与实践，期待与你一同探索更多可能。";
@@ -51,6 +53,13 @@ export function PostEditorScreen({ mode, post, action, draftAction, publishActio
         </div>
       </div>
 
+      {error ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+      ) : null}
+      {success ? (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div>
+      ) : null}
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="space-y-6">
           <AdminCard>
@@ -63,51 +72,7 @@ export function PostEditorScreen({ mode, post, action, draftAction, publishActio
               </EditorInput>
               <EditorInput label="内容" required>
                 <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                  <div className="flex flex-wrap items-center gap-1 border-b bg-slate-50 px-3 py-2 text-sm text-slate-600">
-                    <Button type="button" variant="ghost" size="icon" aria-label="撤销" disabled><Undo2 className="h-4 w-4" /></Button>
-                    {["正文", "B", "I", "U", "S", "</>", "“”", "列表", "链接", "图片", "表格", "更多"].map((item) => (
-                      <Button key={item} type="button" variant="ghost" size="sm" disabled>{item}</Button>
-                    ))}
-                  </div>
-                  <div className="space-y-6 p-6">
-                    <div className="relative h-[280px] overflow-hidden rounded-lg bg-slate-100">
-                      <Image
-                        src={image}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="760px"
-                      />
-                    </div>
-                    <Textarea name="content" defaultValue={content} className="min-h-[220px] border-0 bg-transparent p-0 text-sm leading-7 shadow-none focus-visible:ring-0" required />
-                    <h2 className="text-2xl font-semibold text-note-ink">为什么开始写作？</h2>
-                    <p className="text-sm leading-7 text-slate-600">写作对我来说，不只是记录，更是思考的过程。通过输出，我可以：</p>
-                    <div className="rounded-lg bg-slate-50 p-5 text-sm leading-8 text-slate-600">
-                      <p>✓ 梳理复杂的想法，发现问题的本质</p>
-                      <p>✓ 沉淀知识，形成可复用的体系</p>
-                      <p>✓ 与更多同频的朋友交流，碰撞出新的火花</p>
-                    </div>
-                    <h2 className="text-2xl font-semibold text-note-ink">内容方向</h2>
-                    <p className="text-sm leading-7 text-slate-600">我会围绕以下几个方向持续输出：</p>
-                    <div className="grid gap-4 md:grid-cols-4">
-                      {editorCategories.map((category) => (
-                        <div key={category.title} className="rounded-lg border border-slate-100 p-4">
-                          <div className="mb-3 grid h-10 w-10 place-items-center rounded-lg bg-note-mint text-note-teal">{category.icon}</div>
-                          <p className="font-medium text-note-ink">{category.title}</p>
-                          <p className="mt-1 text-xs leading-5 text-muted-foreground">{category.body}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex justify-center border-t pt-5">
-                      <Button type="button" variant="outline" size="icon" aria-label="添加区块" disabled>+</Button>
-                    </div>
-                    <h2 className="text-2xl font-semibold text-note-ink">近期计划</h2>
-                    <ol className="list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-600">
-                      <li>分享一个完整的个人博客系统搭建过程</li>
-                      <li>探索设计系统在中小团队的落地实践</li>
-                      <li>记录 AI 时代下产品与设计的变化与机会</li>
-                    </ol>
-                  </div>
+                  <RichTextEditor name="content" defaultValue={content} />
                 </div>
               </EditorInput>
               <div className="flex justify-between border-t pt-4 text-xs text-muted-foreground">
@@ -136,12 +101,12 @@ export function PostEditorScreen({ mode, post, action, draftAction, publishActio
                   ))}
                 </select>
               </EditorInput>
-              <EditorInput label="标签（暂未启用）">
-                <div className="flex min-h-11 flex-wrap gap-2 rounded-md border border-slate-200 p-2">
-                  {["个人博客", "设计", "前端"].map((tag) => (
-                    <span key={tag} className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">{tag}</span>
-                  ))}
-                </div>
+              <EditorInput label="标签">
+                <Input
+                  name="tags"
+                  defaultValue={post?.tags?.join(", ") ?? ""}
+                  placeholder="多个标签用逗号分隔，例如：前端, 设计系统"
+                />
               </EditorInput>
               <EditorInput label="封面图">
                 <div className="space-y-3">
@@ -214,7 +179,7 @@ export function PostEditorScreen({ mode, post, action, draftAction, publishActio
             </CardHeader>
             <CardContent className="space-y-2 p-5 pt-0">
               <div className="rounded-lg bg-slate-50 p-4 text-sm leading-6 text-muted-foreground">
-                评论、邮件订阅、隐私模式等站点级开关请在系统设置中统一管理。
+                评论、隐私模式等站点级开关请在系统设置中统一管理。
               </div>
               <Button type="submit" formAction={draftAction} variant="outline" className="mt-3 w-full text-red-600">移至草稿</Button>
             </CardContent>

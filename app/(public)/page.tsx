@@ -7,7 +7,6 @@ import { FeaturedArticleCard } from "@/components/public/home/featured-article-c
 import { HeroVisual } from "@/components/public/home/hero-visual";
 import { HomeBadge } from "@/components/public/home/home-badge";
 import { LatestArticleItem } from "@/components/public/home/latest-article-item";
-import { NewsletterCard } from "@/components/public/home/newsletter-card";
 import { SectionHeading } from "@/components/public/home/section-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -88,7 +87,6 @@ export default async function HomePage() {
         </Card>
         <div className="space-y-6">
           <AuthorProfileCard stats={authorStats} />
-          <NewsletterCard />
         </div>
       </section>
     </div>
