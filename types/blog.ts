@@ -53,3 +53,13 @@ export type SiteSettings = {
   linkedin: string;
   wechat: string;
 };
+
+export type AuditLog = {
+  id: string;
+  actor: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  summary: string;
+  createdAt: string;
+};

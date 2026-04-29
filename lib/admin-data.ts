@@ -1,4 +1,4 @@
-import { FileText, MessageSquare, Settings, Tags } from "lucide-react";
+import { FileClock, FileText, MessageSquare, Settings, Tags } from "lucide-react";
 
 export const settingsTabs = ["基本信息", "外观主题", "导航菜单", "评论设置", "SEO 设置", "账号安全"];
 
@@ -15,5 +15,6 @@ export const sidebarNav = [
   { href: "/admin/posts", label: "文章管理", icon: FileText },
   { href: "/admin/categories", label: "分类管理", icon: Tags },
   { href: "/admin/comments", label: "评论管理", icon: MessageSquare },
+  { href: "/admin/audit-logs", label: "操作日志", icon: FileClock },
   { href: "/admin/settings", label: "设置", icon: Settings },
 ];

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { Category, Comment, Post, SiteSettings } from "@/types/blog";
+import type { AuditLog, Category, Comment, Post, SiteSettings } from "@/types/blog";
 
 type DbPost = {
   id: string;
@@ -35,6 +35,16 @@ type DbComment = {
   body: string;
   status: string;
   flagged: boolean;
+  createdAt: Date;
+};
+
+type DbAuditLog = {
+  id: string;
+  actor: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  summary: string;
   createdAt: Date;
 };
 
@@ -82,6 +92,18 @@ function toComment(comment: DbComment): Comment {
         : "pending",
     flagged: comment.flagged,
     createdAt: comment.createdAt.toISOString().slice(0, 10),
+  };
+}
+
+function toAuditLog(log: DbAuditLog): AuditLog {
+  return {
+    id: log.id,
+    actor: log.actor,
+    action: log.action,
+    entityType: log.entityType,
+    entityId: log.entityId,
+    summary: log.summary,
+    createdAt: log.createdAt.toISOString().replace("T", " ").slice(0, 19),
   };
 }
 
@@ -151,6 +173,15 @@ export async function getCategories() {
 export async function getComments() {
   const dbComments = await prisma.comment.findMany({ orderBy: { createdAt: "desc" } });
   return dbComments.map(toComment);
+}
+
+export async function getAuditLogs() {
+  const logs = await prisma.auditLog.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
+
+  return logs.map(toAuditLog);
 }
 
 export async function getApprovedCommentsForPostTitle(postTitle: string) {

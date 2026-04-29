@@ -12,7 +12,7 @@ export function AdminLoginForm({ next }: { next: string }) {
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="next" value={next} />
-      <Input name="password" type="password" placeholder="管理员密码" className="h-11" required />
+      <Input name="password" type="password" aria-label="管理员密码" placeholder="管理员密码" className="h-11" required />
       <Button type="submit" className="h-11 w-full" disabled={pending}>
         {pending ? "登录中" : "登录后台"}
       </Button>

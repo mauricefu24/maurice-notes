@@ -1,105 +1,111 @@
-import { ArrowDownToLine, ArrowRight, Briefcase, Mail, MapPin, PenLine, UsersRound } from "lucide-react";
-import Image from "next/image";
+import { ArrowRight, BookOpen, CalendarDays, FolderOpen, Mail, NotebookPen, Search, Tag, UserRound } from "lucide-react";
 import Link from "next/link";
 
-import { BlockHeading, ContactLine, MetricTile, SurfaceCard, defaultContactIcons } from "@/components/public/page-blocks";
+import { BlockHeading, SurfaceCard } from "@/components/public/page-blocks";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
-import { aboutContact, aboutFaqs, experience, projects, skillCards, values } from "@/lib/public-page-data";
-import { getBlogStats } from "@/services/blog-service";
+import { aboutContact, aboutFaqs, values } from "@/lib/public-page-data";
+import { getBlogStats, getCategories, getPublishedPosts } from "@/services/blog-service";
+
+const writingPrinciples = [
+  {
+    title: "先记录，再整理",
+    body: "把项目里的判断、工具使用、产品观察和生活经验先留下来，再逐步沉淀为可复用的文章。",
+    icon: NotebookPen,
+  },
+  {
+    title: "以主题组织内容",
+    body: "文章会被放进清晰的分类和归档里，方便之后按主题、时间和关键词重新找到。",
+    icon: FolderOpen,
+  },
+  {
+    title: "保留真实上下文",
+    body: "这里不追求包装成标准答案，更重视当时的问题、约束、取舍和复盘。",
+    icon: BookOpen,
+  },
+];
 
 export default async function AboutPage() {
-  const stats = await getBlogStats();
+  const [stats, categories, posts] = await Promise.all([
+    getBlogStats(),
+    getCategories(),
+    getPublishedPosts(),
+  ]);
+  const latestPost = posts[0];
   const aboutStats = [
-    { label: "发布文章", value: `${stats.publishedPosts}` },
+    { label: "已发布", value: `${stats.publishedPosts}` },
+    { label: "分类", value: `${stats.totalCategories}` },
     { label: "累计阅读", value: stats.totalViewsLabel },
-    { label: "内容分类", value: `${stats.totalCategories}` },
-    { label: "评论互动", value: `${stats.totalComments}` },
-    { label: "草稿储备", value: `${stats.draftPosts}` },
+    { label: "评论", value: `${stats.totalComments}` },
   ];
 
   return (
-    <div className="page-shell space-y-12 py-8">
-      <section className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+    <div className="page-shell space-y-12 py-10">
+      <section className="grid gap-10 border-b border-slate-100 pb-12 lg:grid-cols-[minmax(0,0.9fr)_360px] lg:items-start">
         <div className="space-y-7">
-          <div className="flex items-center gap-7">
-            <div className="relative h-36 w-36 overflow-hidden rounded-full border">
-              <Image
-                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=360&q=80"
-                alt="Maurice"
-                fill
-                priority
-                className="object-cover"
-                sizes="144px"
-              />
+          <div className="inline-flex items-center gap-2 rounded-md bg-note-mint px-3 py-1.5 text-sm font-medium text-note-teal">
+            <UserRound className="h-4 w-4" />
+            Maurice 的个人记录平台
+          </div>
+          <div className="space-y-5">
+            <h1 className="max-w-4xl text-[42px] font-semibold leading-tight tracking-normal text-note-ink md:text-[56px]">
+              记录工作、工具、思考和生活里的长期线索
+            </h1>
+            <p className="max-w-3xl text-base leading-8 text-slate-600">
+              Maurice Notes 是我用来保存想法和实践的地方。它不是作品集，也不是简历页，而是一个持续更新的个人知识库：记录数字化、产品、技术、AI 工具和日常复盘。
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild size="lg" className="h-12 gap-2 px-6">
+              <Link href="/articles">浏览文章 <ArrowRight className="h-4 w-4" /></Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="h-12 gap-2 px-6">
+              <Link href="/archives"><Search className="h-4 w-4" />按归档查找</Link>
+            </Button>
+          </div>
+        </div>
+
+        <SurfaceCard>
+          <CardContent className="space-y-5 p-6">
+            <p className="text-sm font-medium text-muted-foreground">当前记录</p>
+            <div className="grid grid-cols-2 gap-4">
+              {aboutStats.map((stat) => (
+                <div key={stat.label} className="border-t border-slate-100 pt-4">
+                  <p className="text-3xl font-semibold text-note-ink">{stat.value}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+                </div>
+              ))}
             </div>
-            <div>
-              <h1 className="text-[44px] font-semibold tracking-normal text-note-ink">Maurice</h1>
-              <p className="mt-2 text-xl font-medium text-slate-600">数字化经理 / 产品与技术实践者</p>
-              <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
-                <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4" />深圳，中国</span>
-                <span className="inline-flex items-center gap-2"><Mail className="h-4 w-4" />hello@mauricenotes.com</span>
-                <span>10+ 年数字化与产品经验</span>
+            {latestPost ? (
+              <div className="rounded-md bg-slate-50 p-4">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">最近更新</p>
+                <Link href={`/articles/${latestPost.slug}`} className="font-medium leading-6 text-note-ink hover:text-note-teal">
+                  {latestPost.title}
+                </Link>
+                <p className="mt-2 inline-flex items-center gap-2 text-xs text-muted-foreground">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  {latestPost.publishedAt}
+                </p>
               </div>
-            </div>
-          </div>
-          <p className="max-w-3xl text-base leading-8 text-slate-600">
-            专注于用技术与产品驱动业务增长，擅长数字化转型、数据分析、产品设计与团队协作。在这个博客中，我记录思考、方法与实践，希望与更多同路人一起探索更大的世界。
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <Button asChild size="lg" className="gap-2">
-              <Link href="/articles">查看我的文章 <ArrowRight className="h-4 w-4" /></Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="gap-2">
-              <Link href="mailto:hello@mauricenotes.com">
-                <ArrowDownToLine className="h-4 w-4" />
-                联系我
-              </Link>
-            </Button>
-          </div>
-        </div>
-        <div className="relative h-[285px] overflow-hidden rounded-lg border border-slate-200">
-          <Image
-            src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=80"
-            alt=""
-            fill
-            className="object-cover"
-            sizes="560px"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-teal-950/25" />
-        </div>
+            ) : null}
+          </CardContent>
+        </SurfaceCard>
       </section>
 
       <section className="space-y-6">
-        <BlockHeading title="成长与经历" />
-        <div className="grid gap-5 lg:grid-cols-5">
-          {experience.map((item) => (
-            <div key={item.years} className="relative border-t pt-7">
-              <span className="absolute -top-3 left-0 grid h-6 w-6 place-items-center rounded-full bg-note-teal text-white">
-                <Briefcase className="h-3.5 w-3.5" />
-              </span>
-              <p className="text-sm font-medium text-muted-foreground">{item.years}</p>
-              <h3 className="mt-3 font-semibold text-note-ink">{item.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <BlockHeading title="专业领域" />
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-          {skillCards.map((skill) => {
-            const Icon = skill.icon;
+        <BlockHeading title="我在这里记录什么" description="内容会围绕真实经历和长期关注的问题展开。" />
+        <div className="grid gap-4 md:grid-cols-3">
+          {writingPrinciples.map((item) => {
+            const Icon = item.icon;
             return (
-              <SurfaceCard key={skill.title}>
+              <SurfaceCard key={item.title}>
                 <CardContent className="space-y-4 p-5">
-                  <div className={`grid h-12 w-12 place-items-center rounded-lg ${skill.tone}`}>
+                  <div className="grid h-10 w-10 place-items-center rounded-md bg-note-mint text-note-teal">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-note-ink">{skill.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{skill.body}</p>
+                    <h2 className="font-semibold text-note-ink">{item.title}</h2>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.body}</p>
                   </div>
                 </CardContent>
               </SurfaceCard>
@@ -108,84 +114,75 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section className="space-y-6">
-        <BlockHeading
-          title="精选项目"
-          action={<Link href="/articles" className="text-sm font-medium text-note-teal">查看全部项目 →</Link>}
-        />
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          {projects.map((project) => (
-            <SurfaceCard key={project.title} className="overflow-hidden transition hover:shadow-soft">
-              <div className="relative h-36 bg-slate-100">
-                <Image src={project.image} alt="" fill className="object-cover" sizes="280px" />
-                <span className="absolute left-4 top-4 rounded-md bg-note-mint px-2 py-1 text-xs font-medium text-note-teal">
-                  {project.category}
-                </span>
-              </div>
-              <CardContent className="space-y-3 p-5">
-                <h3 className="font-semibold text-note-ink">{project.title}</h3>
-                <p className="text-sm leading-6 text-muted-foreground">{project.body}</p>
-                <p className="text-xs text-muted-foreground">{project.year} · {project.category}</p>
-              </CardContent>
-            </SurfaceCard>
-          ))}
-        </div>
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <SurfaceCard>
+          <CardContent className="space-y-5 p-6">
+            <BlockHeading title="内容分类" description="从分类进入，更适合按主题浏览。" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              {categories.map((category) => (
+                <Link
+                  key={category.slug}
+                  href="/categories"
+                  className="flex items-center justify-between rounded-md border border-slate-100 px-4 py-3 text-sm transition hover:border-note-teal hover:bg-note-mint"
+                >
+                  <span className="inline-flex items-center gap-2 font-medium text-note-ink">
+                    <Tag className="h-4 w-4 text-note-teal" />
+                    {category.name}
+                  </span>
+                  <span className="text-muted-foreground">{category.postCount}</span>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </SurfaceCard>
+
+        <SurfaceCard>
+          <CardContent className="space-y-5 p-6">
+            <BlockHeading title="联系" description="如果某篇记录对你有帮助，欢迎交流。" />
+            <div className="space-y-3 text-sm text-slate-600">
+              {aboutContact.map((item) => (
+                <div key={item} className="flex items-center gap-3">
+                  <span className="grid h-8 w-8 place-items-center rounded-md bg-note-mint text-note-teal">
+                    <Mail className="h-4 w-4" />
+                  </span>
+                  {item}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </SurfaceCard>
       </section>
 
-      <SurfaceCard>
-        <CardContent className="grid gap-6 p-6 md:grid-cols-5">
-          {aboutStats.map((stat, index) => (
-            <MetricTile
-              key={stat.label}
-              value={stat.value}
-              label={stat.label}
-              icon={index % 2 ? <UsersRound className="h-5 w-5" /> : <PenLine className="h-5 w-5" />}
-            />
-          ))}
-        </CardContent>
-      </SurfaceCard>
-
-      <section className="grid gap-6 lg:grid-cols-3">
-        <SurfaceCard>
-          <CardContent className="space-y-4 p-6">
-            <BlockHeading title="联系我" description="欢迎交流与合作，一起探索产品、技术与数字化的更多可能。" />
-            {aboutContact.map((item, index) => (
-              <ContactLine
-                key={item}
-                text={item}
-                icon={index === aboutContact.length - 1 ? defaultContactIcons.location : defaultContactIcons.mail}
-              />
-            ))}
-          </CardContent>
-        </SurfaceCard>
+      <section className="grid gap-6 lg:grid-cols-2">
         <SurfaceCard>
           <CardContent className="space-y-5 p-6">
-            <BlockHeading title="常见问题" />
-            {aboutFaqs.map((faq) => (
-              <div key={faq.question} className="border-b pb-4 last:border-b-0 last:pb-0">
-                <p className="font-medium text-note-ink">{faq.question}</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{faq.answer}</p>
-              </div>
-            ))}
-          </CardContent>
-        </SurfaceCard>
-        <SurfaceCard>
-          <CardContent className="space-y-5 p-6">
-            <BlockHeading title="我的价值观" />
+            <BlockHeading title="记录原则" />
             {values.map((value) => {
               const Icon = value.icon;
               return (
-                <div key={value.title} className="flex gap-3">
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-note-mint text-note-teal">
+                <div key={value.title} className="flex gap-3 border-b border-slate-100 pb-4 last:border-b-0 last:pb-0">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-note-mint text-note-teal">
                     <Icon className="h-4 w-4" />
                   </div>
                   <div>
                     <p className="font-medium text-note-ink">{value.title}</p>
-                    <p className="text-sm leading-6 text-muted-foreground">{value.body}</p>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">{value.body}</p>
                   </div>
                 </div>
               );
             })}
+          </CardContent>
+        </SurfaceCard>
+
+        <SurfaceCard>
+          <CardContent className="space-y-5 p-6">
+            <BlockHeading title="常见问题" />
+            {aboutFaqs.map((faq) => (
+              <div key={faq.question} className="border-b border-slate-100 pb-4 last:border-b-0 last:pb-0">
+                <p className="font-medium text-note-ink">{faq.question}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{faq.answer}</p>
+              </div>
+            ))}
           </CardContent>
         </SurfaceCard>
       </section>

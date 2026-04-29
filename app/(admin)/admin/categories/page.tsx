@@ -79,10 +79,10 @@ export default async function AdminCategoriesPage({ searchParams }: AdminCategor
           </CardHeader>
           <CardContent className="p-5 pt-0">
             <form action={createCategory} className="space-y-4">
-              <Input name="name" placeholder="分类名称" required />
-              <Input name="slug" placeholder="URL 别名，例如 product" />
-              <Textarea name="description" placeholder="分类描述" />
-              <Input name="accent" placeholder="Tailwind 色彩类，例如 bg-teal-50 text-teal-700" />
+              <Input name="name" aria-label="分类名称" placeholder="分类名称" required />
+              <Input name="slug" aria-label="URL 别名" placeholder="URL 别名，例如 product" />
+              <Textarea name="description" aria-label="分类描述" placeholder="分类描述" />
+              <Input name="accent" aria-label="分类色彩类" placeholder="Tailwind 色彩类，例如 bg-teal-50 text-teal-700" />
               <Button type="submit" className="w-full gap-2">
                 <Plus className="h-4 w-4" />
                 创建分类

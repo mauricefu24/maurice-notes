@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { writeAuditLog } from "@/lib/audit-log";
 import { prisma } from "@/lib/prisma";
 
 function text(formData: FormData, name: string) {
@@ -45,13 +46,19 @@ export async function createCategory(formData: FormData) {
     redirect(`/admin/categories?${flashParam("error", "分类名称或 URL 别名已存在")}`);
   }
 
-  await prisma.category.create({
+  const category = await prisma.category.create({
     data: {
       name,
       slug,
       description: text(formData, "description") || `${name} 分类内容`,
       accent: text(formData, "accent") || "bg-teal-50 text-teal-700",
     },
+  });
+  await writeAuditLog({
+    action: "category_create",
+    entityType: "category",
+    entityId: category.slug,
+    summary: `创建分类「${category.name}」`,
   });
 
   revalidateCategories();
@@ -77,6 +84,12 @@ export async function deleteCategory(slug: string) {
   }
 
   await prisma.category.delete({ where: { slug } });
+  await writeAuditLog({
+    action: "category_delete",
+    entityType: "category",
+    entityId: slug,
+    summary: `删除分类「${category.name}」`,
+  });
   revalidateCategories();
   redirect(`/admin/categories?${flashParam("success", "分类已删除")}`);
 }

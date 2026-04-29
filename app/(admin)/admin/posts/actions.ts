@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { writeAuditLog } from "@/lib/audit-log";
 import { prisma } from "@/lib/prisma";
 
 const defaultImage =
@@ -92,6 +93,13 @@ export async function createPost(formData: FormData) {
   const post = await prisma.post.create({
     data: payload.data!,
   });
+  await writeAuditLog({
+    action: "post_create",
+    entityType: "post",
+    entityId: post.id,
+    summary: `创建文章《${post.title}》`,
+    metadata: { slug: post.slug, status: post.status },
+  });
 
   revalidateBlog();
   redirect(`/admin/posts/${post.id}/edit?${flashParam("success", "文章已保存")}`);
@@ -113,6 +121,13 @@ export async function createDraftPost(formData: FormData) {
   const post = await prisma.post.create({
     data: payload.data!,
   });
+  await writeAuditLog({
+    action: "post_draft",
+    entityType: "post",
+    entityId: post.id,
+    summary: `保存草稿《${post.title}》`,
+    metadata: { slug: post.slug },
+  });
 
   revalidateBlog();
   redirect(`/admin/posts/${post.id}/edit?${flashParam("success", "草稿已保存")}`);
@@ -133,6 +148,13 @@ export async function createPublishedPost(formData: FormData) {
 
   const post = await prisma.post.create({
     data: payload.data!,
+  });
+  await writeAuditLog({
+    action: "post_publish",
+    entityType: "post",
+    entityId: post.id,
+    summary: `发布新文章《${post.title}》`,
+    metadata: { slug: post.slug },
   });
 
   revalidateBlog();
@@ -158,6 +180,13 @@ export async function updatePost(id: string, formData: FormData) {
     where: { id },
     data: payload.data!,
   });
+  await writeAuditLog({
+    action: "post_update",
+    entityType: "post",
+    entityId: post.id,
+    summary: `更新文章《${post.title}》`,
+    metadata: { slug: post.slug, status: post.status },
+  });
 
   revalidateBlog();
   revalidatePath(`/articles/${post.slug}`);
@@ -181,6 +210,13 @@ export async function savePostDraft(id: string, formData: FormData) {
   const post = await prisma.post.update({
     where: { id },
     data: payload.data!,
+  });
+  await writeAuditLog({
+    action: "post_draft",
+    entityType: "post",
+    entityId: post.id,
+    summary: `将文章保存为草稿《${post.title}》`,
+    metadata: { slug: post.slug },
   });
 
   revalidateBlog();
@@ -206,6 +242,13 @@ export async function publishPost(id: string, formData: FormData) {
     where: { id },
     data: payload.data!,
   });
+  await writeAuditLog({
+    action: "post_publish",
+    entityType: "post",
+    entityId: post.id,
+    summary: `发布文章《${post.title}》`,
+    metadata: { slug: post.slug },
+  });
 
   revalidateBlog();
   revalidatePath(`/articles/${post.slug}`);
@@ -217,6 +260,13 @@ export async function updatePostStatus(id: string, status: "published" | "draft"
     where: { id },
     data: { status },
   });
+  await writeAuditLog({
+    action: "post_status_update",
+    entityType: "post",
+    entityId: post.id,
+    summary: `将文章《${post.title}》状态切换为 ${status}`,
+    metadata: { slug: post.slug, status },
+  });
 
   revalidateBlog();
   revalidatePath(`/articles/${post.slug}`);
@@ -225,9 +275,17 @@ export async function updatePostStatus(id: string, status: "published" | "draft"
 export async function deletePost(id: string) {
   const post = await prisma.post.delete({
     where: { id },
-    select: { slug: true },
+    select: { slug: true, title: true },
+  });
+  await writeAuditLog({
+    action: "post_delete",
+    entityType: "post",
+    entityId: id,
+    summary: `删除文章《${post.title}》`,
+    metadata: { slug: post.slug },
   });
 
   revalidateBlog();
   revalidatePath(`/articles/${post.slug}`);
+  redirect(`/admin/posts?${flashParam("success", "文章已删除")}`);
 }

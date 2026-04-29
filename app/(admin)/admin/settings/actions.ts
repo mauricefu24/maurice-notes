@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { writeAuditLog } from "@/lib/audit-log";
 import { prisma } from "@/lib/prisma";
 import type { SiteSettings } from "@/types/blog";
 
@@ -31,6 +32,13 @@ export async function saveSiteSettings(formData: FormData) {
     where: { key: "site" },
     create: { key: "site", value: settings },
     update: { value: settings },
+  });
+  await writeAuditLog({
+    action: "settings_update",
+    entityType: "siteSetting",
+    entityId: "site",
+    summary: "保存系统设置",
+    metadata: { siteName: settings.siteName, siteDomain: settings.siteDomain },
   });
 
   revalidatePath("/");
