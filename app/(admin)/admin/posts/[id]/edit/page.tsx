@@ -1,6 +1,6 @@
 import { PostEditorScreen } from "@/components/admin/post-editor-screen";
 import { publishPost, savePostDraft, updatePost } from "@/app/(admin)/admin/posts/actions";
-import { getPostById } from "@/services/blog-service";
+import { getCategories, getPostById } from "@/services/blog-service";
 import { notFound } from "next/navigation";
 
 type EditPostPageProps = {
@@ -11,7 +11,7 @@ type EditPostPageProps = {
 export default async function EditPostPage({ params, searchParams }: EditPostPageProps) {
   const { id } = await params;
   const query = (await searchParams) ?? {};
-  const post = await getPostById(id);
+  const [post, categories] = await Promise.all([getPostById(id), getCategories()]);
 
   if (!post) {
     notFound();
@@ -26,6 +26,7 @@ export default async function EditPostPage({ params, searchParams }: EditPostPag
       post={post}
       error={query.error}
       success={query.success}
+      categories={categories}
     />
   );
 }

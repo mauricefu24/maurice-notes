@@ -1,4 +1,4 @@
-import { Calendar, Check, Clock, History, ImageIcon, Link2, Save } from "lucide-react";
+import { Calendar, Check, Clock, Link2, Save } from "lucide-react";
 import Image from "next/image";
 
 import { AdminCard, AdminPageTitle, EditorInput } from "@/components/admin/admin-blocks";
@@ -7,7 +7,7 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
-import type { Post } from "@/types/blog";
+import type { Category, Post } from "@/types/blog";
 
 type PostEditorScreenProps = {
   mode: "new" | "edit";
@@ -17,9 +17,14 @@ type PostEditorScreenProps = {
   action: (formData: FormData) => void | Promise<void>;
   draftAction: (formData: FormData) => void | Promise<void>;
   publishAction: (formData: FormData) => void | Promise<void>;
+  categories: Category[];
 };
 
-export function PostEditorScreen({ mode, post, error, success, action, draftAction, publishAction }: PostEditorScreenProps) {
+function plainTextLength(value: string) {
+  return value.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/\s/g, "").length;
+}
+
+export function PostEditorScreen({ mode, post, error, success, action, draftAction, publishAction, categories }: PostEditorScreenProps) {
   const title = post?.title ?? "通过文字与代码，探索更大的世界";
   const excerpt =
     post?.excerpt ?? "这里是 Maurice 的数字花园，记录技术、产品、设计与生活中的思考与实践，期待与你一同探索更多可能。";
@@ -28,7 +33,7 @@ export function PostEditorScreen({ mode, post, error, success, action, draftActi
     "在这个信息爆炸的时代，我们每天都会接触到大量的内容。但真正能够带来价值的，往往是那些经过思考、沉淀和实践的知识与经验。";
   const image = post?.image ?? "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80";
   const publishedAt = post?.publishedAt ?? new Date().toISOString().slice(0, 10);
-  const wordCount = content.replace(/\s/g, "").length;
+  const wordCount = plainTextLength(content);
 
   return (
     <form action={action} className="space-y-6">
@@ -42,7 +47,6 @@ export function PostEditorScreen({ mode, post, error, success, action, draftActi
             <Check className="h-4 w-4" />
             已连接数据库保存
           </span>
-          <Button type="button" variant="outline" className="gap-2" disabled><History className="h-4 w-4" />版本历史</Button>
           <Button type="submit" formAction={draftAction} variant="outline" className="gap-2"><Save className="h-4 w-4" />保存草稿</Button>
           {post?.slug && post.status === "published" ? (
             <Button asChild variant="outline"><a href={`/articles/${post.slug}`} target="_blank">预览</a></Button>
@@ -77,7 +81,6 @@ export function PostEditorScreen({ mode, post, error, success, action, draftActi
               </EditorInput>
               <div className="flex justify-between border-t pt-4 text-xs text-muted-foreground">
                 <span>字数统计：{wordCount} 字　阅读时长：{post?.readingTime ?? "约 6 分钟"}</span>
-                <span>元素路径：p &gt; img</span>
               </div>
             </CardContent>
           </AdminCard>
@@ -96,8 +99,8 @@ export function PostEditorScreen({ mode, post, error, success, action, draftActi
                   className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
                   required
                 >
-                  {["技术", "产品", "设计", "生活", "AI"].map((category) => (
-                    <option key={category} value={category}>{category}</option>
+                  {categories.map((category) => (
+                    <option key={category.slug} value={category.name}>{category.name}</option>
                   ))}
                 </select>
               </EditorInput>
@@ -119,7 +122,6 @@ export function PostEditorScreen({ mode, post, error, success, action, draftActi
                       sizes="300px"
                     />
                   </div>
-                  <Button type="button" variant="outline" className="w-full gap-2" disabled><ImageIcon className="h-4 w-4" />更换图片</Button>
                   <Input name="image" defaultValue={image} placeholder="封面图 URL" />
                   <p className="text-xs text-muted-foreground">推荐尺寸：1200x630px，JPG/PNG 格式</p>
                 </div>
@@ -139,9 +141,6 @@ export function PostEditorScreen({ mode, post, error, success, action, draftActi
                     </div>
                   </div>
                 </div>
-              </EditorInput>
-              <EditorInput label="摘要">
-                <Textarea defaultValue={excerpt} className="min-h-24" />
               </EditorInput>
             </CardContent>
           </AdminCard>
@@ -181,7 +180,9 @@ export function PostEditorScreen({ mode, post, error, success, action, draftActi
               <div className="rounded-lg bg-slate-50 p-4 text-sm leading-6 text-muted-foreground">
                 评论、隐私模式等站点级开关请在系统设置中统一管理。
               </div>
-              <Button type="submit" formAction={draftAction} variant="outline" className="mt-3 w-full text-red-600">移至草稿</Button>
+              {mode === "edit" && post?.status === "published" ? (
+                <Button type="submit" formAction={draftAction} variant="outline" className="mt-3 w-full text-red-600">移至草稿</Button>
+              ) : null}
             </CardContent>
           </AdminCard>
         </aside>
