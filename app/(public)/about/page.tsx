@@ -1,28 +1,25 @@
-import { ArrowRight, BookOpen, CalendarDays, FolderOpen, Mail, NotebookPen, Search, Tag, UserRound } from "lucide-react";
+import { ArrowRight, BookOpen, CalendarDays, FolderOpen, Mail, MapPin, NotebookPen, Search, Sparkles, Tag } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
-import { BlockHeading, SurfaceCard } from "@/components/public/page-blocks";
+import { SurfaceCard } from "@/components/public/page-blocks";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
-import { aboutContact, aboutFaqs, values } from "@/lib/public-page-data";
+import { aboutContact } from "@/lib/public-page-data";
 import { getBlogStats, getCategories, getPublishedPosts } from "@/services/blog-service";
 
-const writingPrinciples = [
-  {
-    title: "先记录，再整理",
-    body: "把项目里的判断、工具使用、产品观察和生活经验先留下来，再逐步沉淀为可复用的文章。",
-    icon: NotebookPen,
-  },
-  {
-    title: "以主题组织内容",
-    body: "文章会被放进清晰的分类和归档里，方便之后按主题、时间和关键词重新找到。",
-    icon: FolderOpen,
-  },
-  {
-    title: "保留真实上下文",
-    body: "这里不追求包装成标准答案，更重视当时的问题、约束、取舍和复盘。",
-    icon: BookOpen,
-  },
+const focusAreas = [
+  { title: "产品与数字化", body: "业务判断、系统建设、协作流程", icon: FolderOpen },
+  { title: "技术与工具", body: "工程实践、AI 工具、效率工作流", icon: Sparkles },
+  { title: "复盘与生活", body: "长期观察、阅读、个人节奏", icon: NotebookPen },
+];
+
+const principles = [
+  "真实项目",
+  "持续记录",
+  "按主题沉淀",
+  "可回溯复盘",
 ];
 
 export default async function AboutPage() {
@@ -31,160 +28,178 @@ export default async function AboutPage() {
     getCategories(),
     getPublishedPosts(),
   ]);
-  const latestPost = posts[0];
+  const latestPosts = posts.slice(0, 3);
+  const primaryContact = aboutContact[0] ?? "hello@mauricenotes.com";
+  const location = aboutContact.find((item) => item.includes("中国")) ?? "中国";
   const aboutStats = [
     { label: "已发布", value: `${stats.publishedPosts}` },
     { label: "分类", value: `${stats.totalCategories}` },
     { label: "累计阅读", value: stats.totalViewsLabel },
-    { label: "评论", value: `${stats.totalComments}` },
   ];
 
   return (
-    <div className="page-shell space-y-12 py-10">
-      <section className="grid gap-10 border-b border-slate-100 pb-12 lg:grid-cols-[minmax(0,0.9fr)_360px] lg:items-start">
-        <div className="space-y-7">
-          <div className="inline-flex items-center gap-2 rounded-md bg-note-mint px-3 py-1.5 text-sm font-medium text-note-teal">
-            <UserRound className="h-4 w-4" />
-            Maurice 的个人记录平台
+    <div className="page-shell space-y-10 py-8">
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="grid min-h-[520px] lg:grid-cols-[0.95fr_1.05fr]">
+          <div className="relative min-h-[300px] lg:min-h-full">
+            <Image
+              src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1600&q=85"
+              alt=""
+              fill
+              priority
+              className="object-cover"
+              sizes="(min-width: 1024px) 48vw, 100vw"
+            />
+            <div className="absolute inset-0 bg-slate-950/25" />
+            <div className="absolute bottom-5 left-5 right-5 rounded-lg border border-white/20 bg-white/15 p-4 text-white backdrop-blur-md">
+              <p className="text-sm text-white/72">Maurice Notes</p>
+              <p className="mt-1 text-2xl font-semibold tracking-normal">Personal Knowledge Base</p>
+            </div>
           </div>
-          <div className="space-y-5">
-            <h1 className="max-w-4xl text-[42px] font-semibold leading-tight tracking-normal text-note-ink md:text-[56px]">
-              记录工作、工具、思考和生活里的长期线索
-            </h1>
-            <p className="max-w-3xl text-base leading-8 text-slate-600">
-              Maurice Notes 是我用来保存想法和实践的地方。它不是作品集，也不是简历页，而是一个持续更新的个人知识库：记录数字化、产品、技术、AI 工具和日常复盘。
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild size="lg" className="h-12 gap-2 px-6">
-              <Link href="/articles">浏览文章 <ArrowRight className="h-4 w-4" /></Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="h-12 gap-2 px-6">
-              <Link href="/archives"><Search className="h-4 w-4" />按归档查找</Link>
-            </Button>
-          </div>
-        </div>
 
-        <SurfaceCard>
-          <CardContent className="space-y-5 p-6">
-            <p className="text-sm font-medium text-muted-foreground">当前记录</p>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col justify-between p-6 md:p-8 lg:p-10">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 rounded-md bg-note-mint px-3 py-1.5 text-sm font-medium text-note-teal">
+                <BookOpen className="h-4 w-4" />
+                个人记录平台
+              </div>
+              <div>
+                <h1 className="text-4xl font-semibold leading-tight tracking-normal text-note-ink md:text-5xl">
+                  Maurice
+                </h1>
+                <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">
+                  用文章保存产品、技术、AI 工具和生活复盘，让碎片经验变成可检索的长期资产。
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {principles.map((item) => (
+                  <span key={item} className="rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-600">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
               {aboutStats.map((stat) => (
-                <div key={stat.label} className="border-t border-slate-100 pt-4">
+                <div key={stat.label} className="rounded-lg bg-slate-50 p-4">
                   <p className="text-3xl font-semibold text-note-ink">{stat.value}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
                 </div>
               ))}
             </div>
-            {latestPost ? (
-              <div className="rounded-md bg-slate-50 p-4">
-                <p className="mb-2 text-xs font-medium text-muted-foreground">最近更新</p>
-                <Link href={`/articles/${latestPost.slug}`} className="font-medium leading-6 text-note-ink hover:text-note-teal">
-                  {latestPost.title}
-                </Link>
-                <p className="mt-2 inline-flex items-center gap-2 text-xs text-muted-foreground">
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  {latestPost.publishedAt}
-                </p>
-              </div>
-            ) : null}
-          </CardContent>
-        </SurfaceCard>
-      </section>
 
-      <section className="space-y-6">
-        <BlockHeading title="我在这里记录什么" description="内容会围绕真实经历和长期关注的问题展开。" />
-        <div className="grid gap-4 md:grid-cols-3">
-          {writingPrinciples.map((item) => {
-            const Icon = item.icon;
-            return (
-              <SurfaceCard key={item.title}>
-                <CardContent className="space-y-4 p-5">
-                  <div className="grid h-10 w-10 place-items-center rounded-md bg-note-mint text-note-teal">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-note-ink">{item.title}</h2>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.body}</p>
-                  </div>
-                </CardContent>
-              </SurfaceCard>
-            );
-          })}
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button asChild className="h-11 gap-2 px-5">
+                <Link href="/articles">浏览文章 <ArrowRight className="h-4 w-4" /></Link>
+              </Button>
+              <Button asChild variant="outline" className="h-11 gap-2 px-5">
+                <Link href="/archives"><Search className="h-4 w-4" />查看归档</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <section className="grid gap-5 md:grid-cols-3">
+        {focusAreas.map((item) => {
+          const Icon = item.icon;
+          return (
+            <SurfaceCard key={item.title}>
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold tracking-normal text-note-ink">{item.title}</h2>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.body}</p>
+                  </div>
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-note-mint text-note-teal">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                </div>
+              </CardContent>
+            </SurfaceCard>
+          );
+        })}
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <SurfaceCard>
-          <CardContent className="space-y-5 p-6">
-            <BlockHeading title="内容分类" description="从分类进入，更适合按主题浏览。" />
+          <CardContent className="p-6">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-note-teal">Content Map</p>
+                <h2 className="mt-1 text-2xl font-semibold tracking-normal text-note-ink">内容地图</h2>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/categories">全部分类</Link>
+              </Button>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {categories.map((category) => (
                 <Link
                   key={category.slug}
-                  href="/categories"
-                  className="flex items-center justify-between rounded-md border border-slate-100 px-4 py-3 text-sm transition hover:border-note-teal hover:bg-note-mint"
+                  href={`/categories?category=${category.slug}`}
+                  className="group rounded-lg border border-slate-200 p-4 transition hover:border-note-teal/50 hover:bg-note-mint"
                 >
-                  <span className="inline-flex items-center gap-2 font-medium text-note-ink">
-                    <Tag className="h-4 w-4 text-note-teal" />
-                    {category.name}
-                  </span>
-                  <span className="text-muted-foreground">{category.postCount}</span>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-2 font-medium text-note-ink group-hover:text-note-teal">
+                      <Tag className="h-4 w-4" />
+                      {category.name}
+                    </span>
+                    <span className="rounded-md bg-slate-50 px-2 py-0.5 text-xs text-muted-foreground">{category.postCount}</span>
+                  </div>
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">{category.description}</p>
                 </Link>
               ))}
             </div>
           </CardContent>
         </SurfaceCard>
 
-        <SurfaceCard>
-          <CardContent className="space-y-5 p-6">
-            <BlockHeading title="联系" description="如果某篇记录对你有帮助，欢迎交流。" />
-            <div className="space-y-3 text-sm text-slate-600">
-              {aboutContact.map((item) => (
-                <div key={item} className="flex items-center gap-3">
+        <div className="space-y-6">
+          <SurfaceCard>
+            <CardContent className="space-y-4 p-6">
+              <div>
+                <p className="text-sm font-medium text-note-teal">Contact</p>
+                <h2 className="mt-1 text-2xl font-semibold tracking-normal text-note-ink">联系</h2>
+              </div>
+              <div className="space-y-3 text-sm text-slate-600">
+                <div className="flex items-center gap-3">
                   <span className="grid h-8 w-8 place-items-center rounded-md bg-note-mint text-note-teal">
                     <Mail className="h-4 w-4" />
                   </span>
-                  {item}
+                  {primaryContact}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </SurfaceCard>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-2">
-        <SurfaceCard>
-          <CardContent className="space-y-5 p-6">
-            <BlockHeading title="记录原则" />
-            {values.map((value) => {
-              const Icon = value.icon;
-              return (
-                <div key={value.title} className="flex gap-3 border-b border-slate-100 pb-4 last:border-b-0 last:pb-0">
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-note-mint text-note-teal">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-note-ink">{value.title}</p>
-                    <p className="mt-1 text-sm leading-6 text-muted-foreground">{value.body}</p>
-                  </div>
+                <div className="flex items-center gap-3">
+                  <span className="grid h-8 w-8 place-items-center rounded-md bg-note-mint text-note-teal">
+                    <MapPin className="h-4 w-4" />
+                  </span>
+                  {location}
                 </div>
-              );
-            })}
-          </CardContent>
-        </SurfaceCard>
-
-        <SurfaceCard>
-          <CardContent className="space-y-5 p-6">
-            <BlockHeading title="常见问题" />
-            {aboutFaqs.map((faq) => (
-              <div key={faq.question} className="border-b border-slate-100 pb-4 last:border-b-0 last:pb-0">
-                <p className="font-medium text-note-ink">{faq.question}</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{faq.answer}</p>
               </div>
-            ))}
-          </CardContent>
-        </SurfaceCard>
+            </CardContent>
+          </SurfaceCard>
+
+          <SurfaceCard>
+            <CardContent className="space-y-4 p-6">
+              <div>
+                <p className="text-sm font-medium text-note-teal">Latest</p>
+                <h2 className="mt-1 text-2xl font-semibold tracking-normal text-note-ink">最近更新</h2>
+              </div>
+              <div className="space-y-3">
+                {latestPosts.map((post) => (
+                  <Link key={post.id} href={`/articles/${post.slug}`} className="block rounded-md border border-slate-100 p-3 transition hover:bg-slate-50">
+                    <Badge>{post.category}</Badge>
+                    <p className="mt-2 line-clamp-2 font-medium leading-6 text-note-ink">{post.title}</p>
+                    <p className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      {post.publishedAt}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </SurfaceCard>
+        </div>
       </section>
     </div>
   );
