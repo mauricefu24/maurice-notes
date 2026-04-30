@@ -122,84 +122,94 @@ export default async function AboutPage() {
         })}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <SurfaceCard>
-          <CardContent className="p-6">
-            <div className="mb-5 flex items-center justify-between gap-4">
+      <section className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+          <div className="bg-note-ink p-6 text-white">
+            <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-note-teal">Content Map</p>
-                <h2 className="mt-1 text-2xl font-semibold tracking-normal text-note-ink">内容地图</h2>
+                <p className="text-sm font-medium text-note-mint">Content Index</p>
+                <h2 className="mt-1 text-2xl font-semibold tracking-normal">内容索引</h2>
               </div>
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="secondary" size="sm">
                 <Link href="/categories">全部分类</Link>
               </Button>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {categories.map((category) => (
-                <Link
-                  key={category.slug}
-                  href={`/categories?category=${category.slug}`}
-                  className="group rounded-lg border border-slate-200 p-4 transition hover:border-note-teal/50 hover:bg-note-mint"
-                >
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-white/68">
+              按主题进入记录，比按时间浏览更适合回查方法、工具和项目复盘。
+            </p>
+          </div>
+
+          <div className="grid gap-0 divide-y divide-slate-100 md:grid-cols-2 md:divide-x md:divide-y-0">
+            {categories.map((category, index) => (
+              <Link
+                key={category.slug}
+                href={`/categories?category=${category.slug}`}
+                className="group flex min-h-36 flex-col justify-between p-5 transition hover:bg-note-mint"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="grid h-10 w-10 place-items-center rounded-md bg-slate-100 text-note-teal group-hover:bg-white">
+                    <Tag className="h-5 w-5" />
+                  </div>
+                  <span className="text-3xl font-semibold text-slate-200 group-hover:text-note-teal/30">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+                <div className="mt-5">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="inline-flex items-center gap-2 font-medium text-note-ink group-hover:text-note-teal">
-                      <Tag className="h-4 w-4" />
-                      {category.name}
-                    </span>
-                    <span className="rounded-md bg-slate-50 px-2 py-0.5 text-xs text-muted-foreground">{category.postCount}</span>
+                    <h3 className="text-xl font-semibold tracking-normal text-note-ink group-hover:text-note-teal">{category.name}</h3>
+                    <span className="rounded-md bg-slate-50 px-2 py-1 text-xs text-muted-foreground">{category.postCount} 篇</span>
                   </div>
                   <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">{category.description}</p>
-                </Link>
-              ))}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <aside className="space-y-5">
+          <div className="rounded-lg border border-slate-200 bg-white p-5">
+            <p className="text-sm font-medium text-note-teal">Contact</p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-normal text-note-ink">联系</h2>
+            <div className="mt-5 space-y-3 text-sm text-slate-600">
+              <div className="flex items-center gap-3 rounded-md bg-slate-50 p-3">
+                <span className="grid h-9 w-9 place-items-center rounded-md bg-note-mint text-note-teal">
+                  <Mail className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 break-all">{primaryContact}</span>
+              </div>
+              <div className="flex items-center gap-3 rounded-md bg-slate-50 p-3">
+                <span className="grid h-9 w-9 place-items-center rounded-md bg-note-mint text-note-teal">
+                  <MapPin className="h-4 w-4" />
+                </span>
+                {location}
+              </div>
             </div>
-          </CardContent>
-        </SurfaceCard>
+          </div>
 
-        <div className="space-y-6">
-          <SurfaceCard>
-            <CardContent className="space-y-4 p-6">
-              <div>
-                <p className="text-sm font-medium text-note-teal">Contact</p>
-                <h2 className="mt-1 text-2xl font-semibold tracking-normal text-note-ink">联系</h2>
-              </div>
-              <div className="space-y-3 text-sm text-slate-600">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-8 w-8 place-items-center rounded-md bg-note-mint text-note-teal">
-                    <Mail className="h-4 w-4" />
-                  </span>
-                  {primaryContact}
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="grid h-8 w-8 place-items-center rounded-md bg-note-mint text-note-teal">
-                    <MapPin className="h-4 w-4" />
-                  </span>
-                  {location}
-                </div>
-              </div>
-            </CardContent>
-          </SurfaceCard>
-
-          <SurfaceCard>
-            <CardContent className="space-y-4 p-6">
+          <div className="rounded-lg border border-slate-200 bg-white p-5">
+            <div className="mb-5 flex items-end justify-between gap-3">
               <div>
                 <p className="text-sm font-medium text-note-teal">Latest</p>
                 <h2 className="mt-1 text-2xl font-semibold tracking-normal text-note-ink">最近更新</h2>
               </div>
-              <div className="space-y-3">
-                {latestPosts.map((post) => (
-                  <Link key={post.id} href={`/articles/${post.slug}`} className="block rounded-md border border-slate-100 p-3 transition hover:bg-slate-50">
+              <Link href="/articles" className="text-sm font-medium text-note-teal">全部</Link>
+            </div>
+            <div className="space-y-2">
+              {latestPosts.map((post) => (
+                <Link key={post.id} href={`/articles/${post.slug}`} className="group block rounded-md p-3 transition hover:bg-slate-50">
+                  <div className="flex items-center justify-between gap-3">
                     <Badge>{post.category}</Badge>
-                    <p className="mt-2 line-clamp-2 font-medium leading-6 text-note-ink">{post.title}</p>
-                    <p className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                       <CalendarDays className="h-3.5 w-3.5" />
                       {post.publishedAt}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </CardContent>
-          </SurfaceCard>
-        </div>
+                    </span>
+                  </div>
+                  <p className="mt-2 line-clamp-2 font-medium leading-6 text-note-ink group-hover:text-note-teal">{post.title}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </aside>
       </section>
     </div>
   );
