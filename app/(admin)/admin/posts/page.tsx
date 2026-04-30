@@ -1,4 +1,4 @@
-import { CalendarCheck, CheckCircle2, Edit3, Eye, FileCheck2, FilePenLine, FileText, MessageSquare, PencilLine, Plus, Search, Tags, Trash2 } from "lucide-react";
+import { CalendarCheck, CheckCircle2, Edit3, Eye, FileCheck2, FilePenLine, FileText, Heart, PencilLine, Plus, Search, Tags, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -61,6 +61,16 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
   if (activeCategory) preservedFilters.set("category", activeCategory);
   if (activeAuthor) preservedFilters.set("author", activeAuthor);
   if (activeDate) preservedFilters.set("date", activeDate);
+  const buildStatusHref = (status: "all" | PostStatus) => {
+    const nextParams = new URLSearchParams(preservedFilters);
+
+    if (status !== "all") {
+      nextParams.set("status", status);
+    }
+
+    const queryString = nextParams.toString();
+    return queryString ? `/admin/posts?${queryString}` : "/admin/posts";
+  };
   const counts = {
     all: allPosts.length,
     published: allPosts.filter((post) => post.status === "published").length,
@@ -68,16 +78,15 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
     review: allPosts.filter((post) => post.status === "review").length,
   };
   const adminMetrics = [
-    { label: "全部文章", value: `${stats.totalPosts}`, delta: "数据库同步", icon: FileText, tone: "bg-teal-50 text-teal-700" },
-    { label: "已发布", value: `${stats.publishedPosts}`, delta: "数据库同步", icon: FileCheck2, tone: "bg-emerald-50 text-emerald-700" },
-    { label: "草稿", value: `${stats.draftPosts}`, delta: "数据库同步", icon: PencilLine, tone: "bg-orange-50 text-orange-700" },
-    { label: "审核中", value: `${stats.reviewPosts}`, delta: "数据库同步", icon: CalendarCheck, tone: "bg-amber-50 text-amber-700" },
-    { label: "总浏览量", value: stats.totalViewsLabel, delta: "文章累计", icon: Eye, tone: "bg-blue-50 text-blue-700" },
-    { label: "总评论数", value: `${stats.totalComments}`, delta: `${stats.pendingComments} 待审核`, icon: MessageSquare, tone: "bg-violet-50 text-violet-700" },
+    { label: "全部文章", value: `${stats.totalPosts}`, icon: FileText, tone: "bg-slate-100 text-slate-700", href: buildStatusHref("all"), active: activeStatus === "all" },
+    { label: "已发布", value: `${stats.publishedPosts}`, icon: FileCheck2, tone: "bg-blue-50 text-blue-700", href: buildStatusHref("published"), active: activeStatus === "published" },
+    { label: "草稿", value: `${stats.draftPosts}`, icon: PencilLine, tone: "bg-orange-50 text-orange-700", href: buildStatusHref("draft"), active: activeStatus === "draft" },
+    { label: "审核中", value: `${stats.reviewPosts}`, icon: CalendarCheck, tone: "bg-amber-50 text-amber-700", href: buildStatusHref("review"), active: activeStatus === "review" },
+    { label: "总浏览量", value: stats.totalViewsLabel, icon: Eye, tone: "bg-indigo-50 text-indigo-700" },
+    { label: "总点赞数", value: `${stats.totalLikes}`, icon: Heart, tone: "bg-violet-50 text-violet-700" },
   ];
-  const averageComments = stats.totalPosts ? (stats.totalPostComments / stats.totalPosts).toFixed(1) : "0";
   const contentInsights = [
-    { label: "平均评论数", value: averageComments, hint: "基于文章评论字段" },
+    { label: "总点赞数", value: `${stats.totalLikes}`, hint: "文章累计" },
     { label: "精选文章", value: `${allPosts.filter((post) => post.featured).length}`, hint: "当前已标记精选" },
     { label: "已发布占比", value: stats.totalPosts ? `${Math.round((stats.publishedPosts / stats.totalPosts) * 100)}%` : "0%", hint: "已发布 / 全部文章" },
   ];
@@ -130,12 +139,6 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
             </Button>
           ) : null}
         </form>
-        <Button asChild className="h-11 gap-2">
-          <Link href="/admin/posts/new">
-            <Plus className="h-4 w-4" />
-            新建文章
-          </Link>
-        </Button>
       </AdminFilterBar>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
@@ -148,7 +151,7 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
                     key={filter.value}
                     value={filter.value}
                     asChild
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-note-teal data-[state=active]:shadow-none"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-slate-900 data-[state=active]:text-slate-950 data-[state=active]:shadow-none"
                   >
                     <Link
                       href={`${filter.value === "all" ? "/admin/posts" : `/admin/posts?status=${filter.value}`}${preservedFilters.toString() ? `${filter.value === "all" ? "?" : "&"}${preservedFilters.toString()}` : ""}`}
@@ -160,18 +163,28 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
               </TabsList>
             </Tabs>
 
-            <div className="overflow-hidden rounded-lg border border-slate-100">
-              <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto rounded-lg border border-slate-100">
+              <table className="min-w-[1120px] w-full text-left text-sm">
+                <colgroup>
+                  <col className="w-[38%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[9%]" />
+                  <col className="w-[7%]" />
+                  <col className="w-[6%]" />
+                  <col className="w-[11%]" />
+                </colgroup>
                 <thead className="bg-slate-50 text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3 font-medium">文章</th>
-                    <th className="px-4 py-3 font-medium">作者</th>
-                    <th className="px-4 py-3 font-medium">分类</th>
-                    <th className="px-4 py-3 font-medium">状态</th>
-                    <th className="px-4 py-3 font-medium">发布时间</th>
-                    <th className="px-4 py-3 font-medium">浏览量</th>
-                    <th className="px-4 py-3 font-medium">评论</th>
-                    <th className="px-4 py-3 font-medium">操作</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">文章</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">作者</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">分类</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">状态</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">发布时间</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">浏览量</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">点赞</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">操作</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
@@ -182,7 +195,7 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
                           <div className="relative h-16 w-24 overflow-hidden rounded-md bg-slate-100">
                             <Image src={post.image} alt="" fill className="object-cover" sizes="88px" />
                           </div>
-                          <div className="min-w-[210px]">
+                          <div className="min-w-0">
                             <p className="line-clamp-2 font-medium text-note-ink">{post.title}</p>
                             <p className="line-clamp-1 text-xs text-muted-foreground">{post.excerpt}</p>
                           </div>
@@ -193,16 +206,16 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
                           <div className="relative h-7 w-7 overflow-hidden rounded-full">
                             <Image src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80" alt="" fill className="object-cover" sizes="28px" />
                           </div>
-                          <span>Maurice</span>
+                          <span className="whitespace-nowrap">Maurice</span>
                         </div>
                       </td>
-                      <td className="px-4 py-4"><span className="rounded-md bg-note-mint px-2 py-1 text-xs text-note-teal">{post.category}</span></td>
-                      <td className="px-4 py-4"><AdminStatusBadge status={getPostStatusLabel(post.status)} /></td>
-                      <td className="px-4 py-4 text-muted-foreground">{post.publishedAt}</td>
-                      <td className="px-4 py-4">{post.views}</td>
-                      <td className="px-4 py-4">{post.comments || "-"}</td>
+                      <td className="px-4 py-4"><span className="inline-flex whitespace-nowrap rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">{post.category}</span></td>
+                      <td className="whitespace-nowrap px-4 py-4"><AdminStatusBadge status={getPostStatusLabel(post.status)} /></td>
+                      <td className="whitespace-nowrap px-4 py-4 text-muted-foreground">{post.publishedAt}</td>
+                      <td className="whitespace-nowrap px-4 py-4">{post.views}</td>
+                      <td className="whitespace-nowrap px-4 py-4">{post.likes || "-"}</td>
                       <td className="px-4 py-4">
-                        <div className="flex gap-2">
+                        <div className="flex whitespace-nowrap gap-2">
                           <Button asChild variant="outline" size="icon" aria-label="编辑">
                             <Link href={`/admin/posts/${post.id}/edit`}>
                               <Edit3 className="h-4 w-4" />
@@ -276,7 +289,6 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
 
           <SidePanel title="快速操作">
             <div className="space-y-3">
-              <QuickActionRow label="新建文章" icon={Plus} href="/admin/posts/new" />
               <QuickActionRow label="文章分类" icon={Tags} href="/admin/categories" />
               <QuickActionRow label="草稿箱" icon={Edit3} href="/admin/posts?status=draft" />
               <QuickActionRow label="审核中" icon={CalendarCheck} href="/admin/posts?status=review" />

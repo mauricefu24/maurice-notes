@@ -1,7 +1,6 @@
 "use client";
 
-import { MessageSquare, Share2, ThumbsUp } from "lucide-react";
-import Link from "next/link";
+import { Share2, ThumbsUp } from "lucide-react";
 import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -44,7 +43,7 @@ export function ArticleActions({ title, initialLikes, likeAction }: ArticleActio
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-2">
       <form action={formAction}>
         <Button
           type="submit"
@@ -56,12 +55,6 @@ export function ArticleActions({ title, initialLikes, likeAction }: ArticleActio
           赞 {likeState.likes}
         </Button>
       </form>
-      <Button asChild variant="outline" className="gap-2">
-        <Link href="#comments">
-          <MessageSquare className="h-4 w-4" />
-          评论
-        </Link>
-      </Button>
       <Button type="button" variant="outline" className="gap-2" onClick={shareArticle}>
         <Share2 className="h-4 w-4" />
         {copied ? "已复制链接" : "分享"}

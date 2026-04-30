@@ -11,7 +11,6 @@ const actionLabels: Record<string, string> = {
   post_draft: "保存草稿",
   post_status_update: "切换状态",
   post_delete: "删除文章",
-  comment_status_update: "审核评论",
   category_create: "创建分类",
   category_delete: "删除分类",
   settings_update: "保存设置",

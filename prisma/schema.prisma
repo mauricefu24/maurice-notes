@@ -25,7 +25,6 @@ model Post {
   publishedAt DateTime @default(now())
   readingTime String   @default("6 分钟阅读")
   views       String   @default("0")
-  comments    Int      @default(0)
   likes       Int      @default(0)
   tags        String[] @default([])
   image       String
@@ -43,18 +42,6 @@ model Category {
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  author    String
-  avatar    String?
-  postTitle String
-  body      String   @db.Text
-  status    String   @default("pending")
-  flagged   Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model SiteSetting {

@@ -20,22 +20,10 @@ export type Post = {
   publishedAt: string;
   readingTime: string;
   views: string;
-  comments: number;
   likes: number;
   tags: string[];
   image: string;
   featured?: boolean;
-};
-
-export type Comment = {
-  id: string;
-  author: string;
-  avatar?: string;
-  postTitle: string;
-  body: string;
-  status: "pending" | "approved" | "spam" | "deleted";
-  flagged?: boolean;
-  createdAt: string;
 };
 
 export type SiteSettings = {

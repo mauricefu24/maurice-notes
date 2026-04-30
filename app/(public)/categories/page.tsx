@@ -102,7 +102,7 @@ function ArticleRow({ post }: { post: Post }) {
         </div>
         <div className="flex gap-5 text-sm text-muted-foreground md:justify-end">
           <span>{post.views} 阅读</span>
-          <span>{post.comments} 评论</span>
+          <span>{post.likes} 赞</span>
         </div>
       </div>
     </Link>

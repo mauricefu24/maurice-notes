@@ -65,8 +65,8 @@ export default async function ArchivesPage({ searchParams }: ArchivesPageProps) 
   const archiveStats = [
     { label: "文章总数", value: `${stats.publishedPosts}` },
     { label: "分类数量", value: `${stats.totalCategories}` },
-    { label: "评论数量", value: `${stats.totalComments}` },
     { label: "累计阅读", value: stats.totalViewsLabel },
+    { label: "点赞数量", value: `${stats.totalLikes}` },
   ];
 
   return (

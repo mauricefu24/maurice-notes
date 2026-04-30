@@ -1,15 +1,14 @@
-import { Calendar, Clock, Eye, Heart } from "lucide-react";
+import { Calendar, Clock, Eye } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { createArticleComment, likeArticle } from "@/app/(public)/articles/[slug]/actions";
+import { likeArticle } from "@/app/(public)/articles/[slug]/actions";
 import { ArticleActions } from "@/components/public/article-actions";
-import { CommentComposer } from "@/components/public/comment-composer";
 import { BlockHeading, MiniArticleCard, SidebarPanel, SurfaceCard, TagPill } from "@/components/public/page-blocks";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
-import { getApprovedCommentsForPostTitle, getPublishedPosts, getPostBySlug } from "@/services/blog-service";
+import { getPublishedPosts, getPostBySlug } from "@/services/blog-service";
 
 type ArticleDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -28,8 +27,6 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
     notFound();
   }
 
-  const comments = await getApprovedCommentsForPostTitle(post.title);
-  const commentAction = createArticleComment.bind(null, post.slug, post.title);
   const likeAction = likeArticle.bind(null, post.slug);
   const wordCount = plainTextLength(post.content);
 
@@ -105,45 +102,9 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
             </SurfaceCard>
           </section>
 
-          <section id="comments" className="space-y-4">
-            <BlockHeading title={`评论（${comments.length}）`} />
-            <SurfaceCard>
-              <CardContent className="space-y-5 p-5">
-                <CommentComposer action={commentAction} />
-                <div className="space-y-4">
-                  {comments.length ? comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3 border-t pt-4">
-                      <div className="h-9 w-9 rounded-full bg-note-mint" />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-3">
-                          <p className="font-medium text-note-ink">{comment.author}</p>
-                          <p className="text-xs text-muted-foreground">{comment.createdAt}</p>
-                        </div>
-                        <p className="mt-1 text-sm leading-6 text-slate-600">{comment.body}</p>
-                      </div>
-                      <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                        <Heart className="h-4 w-4" />
-                        0
-                      </span>
-                    </div>
-                  )) : (
-                    <p className="border-t pt-4 text-sm text-muted-foreground">暂无已通过评论，欢迎留下第一条评论。</p>
-                  )}
-                </div>
-              </CardContent>
-            </SurfaceCard>
-          </section>
         </main>
 
         <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
-          <SidebarPanel title="文章目录">
-            <nav className="space-y-3 text-sm">
-              <a href="#comments" className="flex gap-3 text-slate-600 hover:text-note-teal">
-                <span className="text-note-teal">1.</span>
-                评论讨论
-              </a>
-            </nav>
-          </SidebarPanel>
           <SidebarPanel title="分享文章">
             <div className="grid grid-cols-4 gap-3 text-center text-xs text-muted-foreground">
               {["微信", "微博", "Twitter", "复制链接"].map((item) => (

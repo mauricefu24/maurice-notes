@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { AuditLog, Category, Comment, Post, SiteSettings } from "@/types/blog";
+import type { AuditLog, Category, Post, SiteSettings } from "@/types/blog";
 
 type DbPost = {
   id: string;
@@ -13,7 +13,6 @@ type DbPost = {
   publishedAt: Date;
   readingTime: string;
   views: string;
-  comments: number;
   likes: number;
   tags: string[];
   image: string;
@@ -25,17 +24,6 @@ type DbCategory = {
   name: string;
   description: string;
   accent: string;
-};
-
-type DbComment = {
-  id: string;
-  author: string;
-  avatar: string | null;
-  postTitle: string;
-  body: string;
-  status: string;
-  flagged: boolean;
-  createdAt: Date;
 };
 
 type DbAuditLog = {
@@ -61,7 +49,6 @@ function toPost(post: DbPost): Post {
     publishedAt: post.publishedAt.toISOString().slice(0, 10),
     readingTime: post.readingTime,
     views: post.views,
-    comments: post.comments,
     likes: post.likes,
     tags: post.tags,
     image: post.image,
@@ -76,22 +63,6 @@ function toCategory(category: DbCategory, postCount: number): Category {
     description: category.description,
     accent: category.accent,
     postCount,
-  };
-}
-
-function toComment(comment: DbComment): Comment {
-  return {
-    id: comment.id,
-    author: comment.author,
-    avatar: comment.avatar ?? undefined,
-    postTitle: comment.postTitle,
-    body: comment.body,
-    status:
-      comment.status === "approved" || comment.status === "spam" || comment.status === "deleted"
-        ? comment.status
-        : "pending",
-    flagged: comment.flagged,
-    createdAt: comment.createdAt.toISOString().slice(0, 10),
   };
 }
 
@@ -170,11 +141,6 @@ export async function getCategories() {
   return dbCategories.map((category) => toCategory(category, postCountByCategory.get(category.name) ?? 0));
 }
 
-export async function getComments() {
-  const dbComments = await prisma.comment.findMany({ orderBy: { createdAt: "desc" } });
-  return dbComments.map(toComment);
-}
-
 export async function getAuditLogs() {
   const logs = await prisma.auditLog.findMany({
     orderBy: { createdAt: "desc" },
@@ -184,47 +150,28 @@ export async function getAuditLogs() {
   return logs.map(toAuditLog);
 }
 
-export async function getApprovedCommentsForPostTitle(postTitle: string) {
-  const dbComments = await prisma.comment.findMany({
-    where: {
-      postTitle,
-      status: "approved",
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return dbComments.map(toComment);
-}
-
 export async function getSiteSettings(): Promise<SiteSettings> {
   const setting = await prisma.siteSetting.findUnique({ where: { key: "site" } });
   return setting?.value as SiteSettings;
 }
 
 export async function getBlogStats() {
-  const [allPosts, dbCategories, dbComments] = await Promise.all([
+  const [allPosts, dbCategories] = await Promise.all([
     prisma.post.findMany({
       select: {
         status: true,
         views: true,
-        comments: true,
         likes: true,
       },
     }),
     prisma.category.findMany({ select: { slug: true } }),
-    prisma.comment.findMany({ select: { status: true } }),
   ]);
 
   const publishedPosts = allPosts.filter((post) => post.status === "published");
   const draftPosts = allPosts.filter((post) => post.status === "draft");
   const reviewPosts = allPosts.filter((post) => post.status === "review");
   const totalViews = allPosts.reduce((total, post) => total + parseViews(post.views), 0);
-  const totalPostComments = allPosts.reduce((total, post) => total + post.comments, 0);
   const totalLikes = allPosts.reduce((total, post) => total + post.likes, 0);
-  const pendingComments = dbComments.filter((comment) => comment.status === "pending");
-  const approvedComments = dbComments.filter((comment) => comment.status === "approved");
-  const spamComments = dbComments.filter((comment) => comment.status === "spam");
-  const deletedComments = dbComments.filter((comment) => comment.status === "deleted");
 
   return {
     totalPosts: allPosts.length,
@@ -233,13 +180,7 @@ export async function getBlogStats() {
     reviewPosts: reviewPosts.length,
     totalViews,
     totalViewsLabel: formatCompactNumber(totalViews),
-    totalPostComments,
     totalLikes,
-    totalComments: dbComments.length,
-    pendingComments: pendingComments.length,
-    approvedComments: approvedComments.length,
-    spamComments: spamComments.length,
-    deletedComments: deletedComments.length,
     totalCategories: dbCategories.length,
   };
 }

@@ -34,16 +34,6 @@ test("public pages, navigation, article actions, and admin workflows", async ({ 
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/archives\?q=/);
 
-  await page.goto(`${baseURL}/articles`);
-  const articleLink = page.locator('a[href^="/articles/"]').first();
-  await expect(articleLink).toBeVisible();
-  await articleLink.click();
-  await expect(page).toHaveURL(/\/articles\/[^/]+$/);
-  await expect(page.getByRole("button", { name: /赞/ })).toBeVisible();
-  await page.getByRole("link", { name: "评论", exact: true }).click();
-  await expect(page.locator("#comments")).toBeVisible();
-  await page.getByRole("button", { name: "分享" }).click();
-
   const password = readEnvValue("ADMIN_PASSWORD");
   expect(password, "ADMIN_PASSWORD must exist in .env for admin flow").toBeTruthy();
 
@@ -53,7 +43,7 @@ test("public pages, navigation, article actions, and admin workflows", async ({ 
   await page.getByRole("button", { name: "登录" }).click();
   await expect(page).toHaveURL(/\/admin\/dashboard/);
 
-  for (const path of ["/admin/dashboard", "/admin/posts", "/admin/categories", "/admin/comments", "/admin/settings", "/admin/audit-logs"]) {
+  for (const path of ["/admin/dashboard", "/admin/posts", "/admin/categories", "/admin/settings", "/admin/audit-logs"]) {
     await page.goto(`${baseURL}${path}`);
     await expect(page.locator("body")).toBeVisible();
   }
@@ -64,6 +54,10 @@ test("public pages, navigation, article actions, and admin workflows", async ({ 
   await expect(page).toHaveURL(/\/admin\/posts\?q=/);
   await page.getByRole("link", { name: "清除" }).click();
   await expect(page).toHaveURL(/\/admin\/posts$/);
+  await page.locator('a[href="/admin/posts?status=published"]').first().click();
+  await expect(page).toHaveURL(/\/admin\/posts\?status=published$/);
+  await page.locator('a[href="/admin/posts"]').filter({ hasText: "全部文章" }).first().click();
+  await expect(page).toHaveURL(/\/admin\/posts$/);
 
   const id = Date.now();
   const title = `E2E 巡检文章 ${id}`;
@@ -72,12 +66,17 @@ test("public pages, navigation, article actions, and admin workflows", async ({ 
   await expect(page).toHaveURL(/\/admin\/posts\/new/);
   await page.getByLabel("文章标题").fill(title);
   await page.getByLabel("URL 别名").fill(slug);
+  await page.getByLabel("分类").selectOption({ index: 1 });
+  await page.getByRole("button", { name: "文字预览" }).click();
+  await expect(page.getByRole("dialog", { name: "文章文字预览" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: title })).toBeVisible();
+  await page.getByRole("button", { name: "关闭预览" }).click();
   await page.getByRole("button", { name: /保存草稿/ }).first().click();
   await expect(page).toHaveURL(/\/admin\/posts\/.+\/edit\?success=/);
   await expect(page.getByText("草稿已保存")).toBeVisible();
   await page.getByRole("button", { name: "发布" }).click();
   await expect(page.getByText("文章已发布")).toBeVisible();
-  const preview = page.getByRole("link", { name: "预览" });
+  const preview = page.getByRole("link", { name: "查看线上" });
   await expect(preview).toBeVisible();
   const popupPromise = context.waitForEvent("page");
   await preview.click();

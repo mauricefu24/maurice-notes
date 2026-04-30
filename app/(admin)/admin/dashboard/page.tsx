@@ -1,22 +1,21 @@
-import { Circle, Eye, FileCheck2, FileText, MessageSquare, Plus, Settings, Tags } from "lucide-react";
+import { Circle, Eye, FileCheck2, FileText, Heart, Plus, Settings, Tags } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { AdminCard, AdminPageTitle, AdminStatCard, QuickActionRow, SidePanel } from "@/components/admin/admin-blocks";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCommentStatusLabel, getPostStatusLabel } from "@/lib/status-labels";
-import { getAllPosts, getBlogStats, getCategories, getComments } from "@/services/blog-service";
+import { getPostStatusLabel } from "@/lib/status-labels";
+import { getAllPosts, getBlogStats, getCategories } from "@/services/blog-service";
 
 export default async function AdminDashboardPage() {
   const posts = await getAllPosts();
-  const comments = await getComments();
   const categories = await getCategories();
   const stats = await getBlogStats();
   const dashboardMetrics = [
     { label: "总文章数", value: `${stats.totalPosts}`, delta: "数据库同步", icon: FileText, tone: "bg-teal-50 text-teal-700" },
     { label: "已发布", value: `${stats.publishedPosts}`, delta: "数据库同步", icon: FileCheck2, tone: "bg-emerald-50 text-emerald-700" },
     { label: "总浏览量", value: stats.totalViewsLabel, delta: "文章累计", icon: Eye, tone: "bg-blue-50 text-blue-700" },
-    { label: "评论数", value: `${stats.totalComments}`, delta: `${stats.pendingComments} 待审核`, icon: MessageSquare, tone: "bg-orange-50 text-orange-700" },
+    { label: "点赞数", value: `${stats.totalLikes}`, delta: "文章累计", icon: Heart, tone: "bg-rose-50 text-rose-700" },
   ];
   const categoryDistribution = categories.map((category, index) => ({
     label: category.name,
@@ -25,23 +24,22 @@ export default async function AdminDashboardPage() {
     color: ["bg-note-teal", "bg-blue-500", "bg-orange-400", "bg-amber-500", "bg-violet-500"][index % 5],
   }));
   const tasks = [
-    { title: `审核 ${stats.pendingComments} 条待审评论`, due: `${stats.pendingComments}`, status: "待处理" },
-    { title: `处理 ${stats.reviewPosts} 篇审核中文章`, due: `${stats.reviewPosts}`, status: "进行中" },
-    { title: `维护 ${stats.totalCategories} 个内容分类`, due: `${stats.totalCategories}`, status: "计划中" },
+    { title: `处理 ${stats.reviewPosts} 篇审核中文章`, due: `${stats.reviewPosts}` },
+    { title: `维护 ${stats.totalCategories} 个内容分类`, due: `${stats.totalCategories}` },
+    { title: `更新 ${stats.draftPosts} 篇草稿`, due: `${stats.draftPosts}` },
   ];
   const activityBars = posts.slice(0, 7).map((post) => {
     const views = Number(post.views.replace(/[^\d.]/g, "")) || 0;
     return {
       label: post.publishedAt.slice(5),
       views: Math.max(8, Math.min(160, views)),
-      comments: Math.max(6, Math.min(120, post.comments * 12)),
+      likes: Math.max(6, Math.min(120, post.likes * 12)),
     };
   });
   const quickActions = [
     { label: "新建文章", icon: Plus, href: "/admin/posts/new" },
     { label: "管理文章", icon: FileText, href: "/admin/posts" },
     { label: "管理分类", icon: Tags, href: "/admin/categories" },
-    { label: "审核评论", icon: MessageSquare, href: "/admin/comments" },
     { label: "系统设置", icon: Settings, href: "/admin/settings" },
   ];
 
@@ -66,14 +64,14 @@ export default async function AdminDashboardPage() {
             <div className="relative h-72 rounded-lg border border-slate-100 bg-gradient-to-b from-white to-slate-50 p-5">
               <div className="absolute left-5 top-5 flex gap-5 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-2"><i className="h-1.5 w-5 rounded-full bg-note-teal" />浏览量</span>
-                <span className="inline-flex items-center gap-2"><i className="h-1.5 w-5 rounded-full bg-blue-400" />评论数</span>
+                <span className="inline-flex items-center gap-2"><i className="h-1.5 w-5 rounded-full bg-rose-400" />点赞数</span>
               </div>
               <div className="flex h-full items-end gap-6 pt-12">
                 {activityBars.map((item) => (
                   <div key={item.label} className="flex flex-1 flex-col items-center gap-3">
                     <div className="flex h-44 w-full items-end justify-center gap-2 border-b border-dashed border-slate-200">
                       <span className="w-3 rounded-t bg-note-teal" style={{ height: `${item.views}px` }} />
-                      <span className="w-3 rounded-t bg-blue-400" style={{ height: `${item.comments}px` }} />
+                      <span className="w-3 rounded-t bg-rose-400" style={{ height: `${item.likes}px` }} />
                     </div>
                     <span className="text-xs text-muted-foreground">{item.label}</span>
                   </div>
@@ -162,44 +160,23 @@ export default async function AdminDashboardPage() {
         </SidePanel>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <AdminCard>
-          <CardHeader className="flex-row items-center justify-between p-5">
-            <CardTitle className="text-lg tracking-normal">最新评论</CardTitle>
-            <Link href="/admin/comments" className="text-sm font-medium text-note-teal">查看全部评论 →</Link>
-          </CardHeader>
-          <CardContent className="space-y-4 p-5 pt-0">
-            {comments.map((comment) => (
-              <div key={comment.id} className="flex items-center justify-between gap-4 rounded-lg border border-slate-100 p-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-note-ink">{comment.author}</p>
-                  <p className="line-clamp-1 text-sm text-muted-foreground">{comment.body}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">评论于：{comment.postTitle}</p>
-                </div>
-                <span className="rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-700">{getCommentStatusLabel(comment.status)}</span>
+      <AdminCard>
+        <CardHeader className="p-5">
+          <CardTitle className="text-lg tracking-normal">待办任务</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 p-5 pt-0 md:grid-cols-3">
+          {tasks.map((task) => (
+            <div key={task.title} className="flex gap-3 rounded-lg border border-slate-100 p-4">
+              <Circle className="mt-1 h-4 w-4 text-muted-foreground" />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-note-ink">{task.title}</p>
+                <p className="mt-1 text-sm text-muted-foreground">保持内容结构清晰，维护长期记录质量。</p>
               </div>
-            ))}
-          </CardContent>
-        </AdminCard>
-
-        <AdminCard>
-          <CardHeader className="p-5">
-            <CardTitle className="text-lg tracking-normal">待办任务</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5 p-5 pt-0">
-            {tasks.map((task) => (
-              <div key={task.title} className="flex gap-3">
-                <Circle className="mt-1 h-4 w-4 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-note-ink">{task.title}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">及时处理用户互动，维护社区氛围。</p>
-                </div>
-                <span className="h-fit rounded-md bg-slate-100 px-2 py-1 text-xs text-muted-foreground">{task.due}</span>
-              </div>
-            ))}
-          </CardContent>
-        </AdminCard>
-      </div>
+              <span className="h-fit rounded-md bg-slate-100 px-2 py-1 text-xs text-muted-foreground">{task.due}</span>
+            </div>
+          ))}
+        </CardContent>
+      </AdminCard>
     </div>
   );
 }

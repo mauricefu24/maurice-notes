@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS "Comment";
+ALTER TABLE "Post" DROP COLUMN IF EXISTS "comments";
