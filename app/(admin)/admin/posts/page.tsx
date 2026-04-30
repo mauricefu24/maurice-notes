@@ -68,10 +68,10 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
     review: allPosts.filter((post) => post.status === "review").length,
   };
   const adminMetrics = [
-    { label: "全部文章", value: `${stats.totalPosts}`, delta: "实时数据", icon: FileText, tone: "bg-teal-50 text-teal-700" },
-    { label: "已发布", value: `${stats.publishedPosts}`, delta: "实时数据", icon: FileCheck2, tone: "bg-emerald-50 text-emerald-700" },
-    { label: "草稿", value: `${stats.draftPosts}`, delta: "实时数据", icon: PencilLine, tone: "bg-orange-50 text-orange-700" },
-    { label: "审核中", value: `${stats.reviewPosts}`, delta: "实时数据", icon: CalendarCheck, tone: "bg-amber-50 text-amber-700" },
+    { label: "全部文章", value: `${stats.totalPosts}`, delta: "数据库同步", icon: FileText, tone: "bg-teal-50 text-teal-700" },
+    { label: "已发布", value: `${stats.publishedPosts}`, delta: "数据库同步", icon: FileCheck2, tone: "bg-emerald-50 text-emerald-700" },
+    { label: "草稿", value: `${stats.draftPosts}`, delta: "数据库同步", icon: PencilLine, tone: "bg-orange-50 text-orange-700" },
+    { label: "审核中", value: `${stats.reviewPosts}`, delta: "数据库同步", icon: CalendarCheck, tone: "bg-amber-50 text-amber-700" },
     { label: "总浏览量", value: stats.totalViewsLabel, delta: "文章累计", icon: Eye, tone: "bg-blue-50 text-blue-700" },
     { label: "总评论数", value: `${stats.totalComments}`, delta: `${stats.pendingComments} 待审核`, icon: MessageSquare, tone: "bg-violet-50 text-violet-700" },
   ];
@@ -164,7 +164,6 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 text-muted-foreground">
                   <tr>
-                    <th className="w-10 px-4 py-3"><input type="checkbox" aria-label="全选文章" /></th>
                     <th className="px-4 py-3 font-medium">文章</th>
                     <th className="px-4 py-3 font-medium">作者</th>
                     <th className="px-4 py-3 font-medium">分类</th>
@@ -178,7 +177,6 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
                 <tbody className="divide-y divide-slate-100 bg-white">
                   {posts.map((post) => (
                     <tr key={post.id} className="hover:bg-slate-50/70">
-                      <td className="px-4 py-4"><input type="checkbox" aria-label={`选择 ${post.title}`} /></td>
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           <div className="relative h-16 w-24 overflow-hidden rounded-md bg-slate-100">
@@ -216,11 +214,7 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
                                 <Eye className="h-4 w-4" />
                               </Link>
                             </Button>
-                          ) : (
-                            <Button variant="outline" size="icon" aria-label="未发布文章不可预览" disabled>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          )}
+                          ) : null}
                           <form action={updatePostStatus.bind(null, post.id, post.status === "published" ? "draft" : "published")}>
                             <Button
                               type="submit"
@@ -250,18 +244,9 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
               </table>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>已选择 0 项</span>
-                <Button variant="outline" size="sm" disabled>批量发布</Button>
-                <Button variant="outline" size="sm" disabled>批量设为草稿</Button>
-                <Button variant="outline" size="sm" disabled className="text-red-600"><Trash2 className="mr-1 h-4 w-4" />批量删除</Button>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">共 {posts.length} 条</span>
-                <Button variant="outline" size="sm" disabled>10 条/页</Button>
-                <Button size="sm">1</Button>
-              </div>
+            <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-4 text-sm text-muted-foreground">
+              <span>当前显示 {posts.length} 条</span>
+              <span>筛选条件来自数据库实时结果</span>
             </div>
           </CardContent>
         </AdminCard>

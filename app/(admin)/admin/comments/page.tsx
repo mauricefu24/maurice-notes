@@ -1,8 +1,8 @@
-import { AlertTriangle, Bell, Check, FileCheck2, MessageSquare, Search, Trash2, X } from "lucide-react";
+import { AlertTriangle, Bell, Check, FileCheck2, MessageSquare, Search, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { AdminCard, AdminFilterBar, AdminPageTitle, AdminSearchInput, AdminStatusBadge, CommentActionButtons, SelectLike, SidePanel } from "@/components/admin/admin-blocks";
+import { AdminCard, AdminFilterBar, AdminPageTitle, AdminSearchInput, AdminStatusBadge, CommentActionButtons, SidePanel } from "@/components/admin/admin-blocks";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -83,10 +83,6 @@ export default async function AdminCommentsPage({ searchParams }: AdminCommentsP
             </Button>
           ) : null}
         </form>
-        <SelectLike label="所有文章" />
-        <SelectLike label="所有状态" />
-        <SelectLike label="所有时间" />
-        <SelectLike label="更多筛选" />
         <Button asChild variant="outline">
           <Link href="/admin/comments">重置</Link>
         </Button>
@@ -95,22 +91,15 @@ export default async function AdminCommentsPage({ searchParams }: AdminCommentsP
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
         <AdminCard>
           <CardContent className="space-y-4 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <input type="checkbox" aria-label="全选评论" />
-                <span>已选择 0 项</span>
-                <Button variant="outline" size="sm" className="text-emerald-700" disabled><Check className="mr-1 h-4 w-4" />批量通过</Button>
-                <Button variant="outline" size="sm" className="text-red-600" disabled><X className="mr-1 h-4 w-4" />批量拒绝</Button>
-                <Button variant="outline" size="sm" disabled>更多操作</Button>
-              </div>
-              <Button variant="outline" size="sm" disabled>最新评论</Button>
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4 text-sm text-muted-foreground">
+              <span>当前显示 {comments.length} 条评论</span>
+              <span>按创建时间倒序</span>
             </div>
 
             <div className="divide-y divide-slate-100">
               {comments.map((comment) => (
                 <div key={comment.id} className={comment.flagged ? "bg-rose-50/40 px-3 py-5" : "px-3 py-5"}>
-                  <div className="grid gap-4 md:grid-cols-[24px_48px_1fr_auto]">
-                    <input type="checkbox" aria-label={`选择 ${comment.author} 的评论`} className="mt-3" />
+                  <div className="grid gap-4 md:grid-cols-[48px_1fr_auto]">
                     <div className="relative h-11 w-11 overflow-hidden rounded-full bg-slate-100">
                       {comment.avatar ? (
                         <Image src={comment.avatar} alt="" fill className="object-cover" sizes="44px" />
@@ -138,11 +127,7 @@ export default async function AdminCommentsPage({ searchParams }: AdminCommentsP
 
             <div className="flex items-center justify-between border-t pt-4 text-sm text-muted-foreground">
               <span>共 {comments.length} 条评论</span>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" disabled>上一页</Button>
-                <Button size="sm">1</Button>
-                <Button variant="outline" size="sm" disabled>下一页</Button>
-              </div>
+              <span>审核操作会立即写入数据库</span>
             </div>
           </CardContent>
         </AdminCard>

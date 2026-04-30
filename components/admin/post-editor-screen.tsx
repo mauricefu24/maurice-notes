@@ -5,7 +5,6 @@ import { AdminCard, AdminPageTitle, EditorInput } from "@/components/admin/admin
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import type { Category, Post } from "@/types/blog";
 
@@ -50,9 +49,7 @@ export function PostEditorScreen({ mode, post, error, success, action, draftActi
           <Button type="submit" formAction={draftAction} variant="outline" className="gap-2"><Save className="h-4 w-4" />保存草稿</Button>
           {post?.slug && post.status === "published" ? (
             <Button asChild variant="outline"><a href={`/articles/${post.slug}`} target="_blank">预览</a></Button>
-          ) : (
-            <Button type="button" variant="outline" disabled>预览</Button>
-          )}
+          ) : null}
           <Button type="submit" formAction={publishAction} className="gap-2">发布</Button>
         </div>
       </div>
@@ -128,8 +125,7 @@ export function PostEditorScreen({ mode, post, error, success, action, draftActi
               </EditorInput>
               <EditorInput label="发布时间">
                 <div className="space-y-3 text-sm">
-                  <label className="flex items-center gap-2"><input type="radio" name="publishMode" defaultChecked />立即发布</label>
-                  <label className="flex items-center gap-2 text-muted-foreground"><input type="radio" name="publishMode" disabled />定时发布</label>
+                  <label className="flex items-center gap-2"><input type="radio" name="publishMode" defaultChecked />使用下方日期发布</label>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="relative">
                       <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -151,10 +147,14 @@ export function PostEditorScreen({ mode, post, error, success, action, draftActi
             </CardHeader>
             <CardContent className="space-y-4 p-5 pt-0">
               <EditorInput label="SEO 标题">
-                <Input defaultValue={`${title} | Maurice Notes`} disabled />
+                <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                  {title} | Maurice Notes
+                </div>
               </EditorInput>
               <EditorInput label="SEO 描述">
-                <Textarea defaultValue={excerpt} disabled />
+                <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-600">
+                  {excerpt}
+                </div>
               </EditorInput>
               <EditorInput label="URL 别名">
                 <div className="flex items-center gap-2">

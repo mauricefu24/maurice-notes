@@ -1,4 +1,4 @@
-import { Bell, LogOut, Search } from "lucide-react";
+import { LogOut, Search } from "lucide-react";
 
 import { logoutAdmin } from "@/app/(admin)/admin/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -15,9 +15,6 @@ export function AdminTopbar() {
           <Button type="submit" variant="ghost" size="sm">搜索</Button>
         </form>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" aria-label="通知" disabled>
-            <Bell className="h-4 w-4" />
-          </Button>
           <Avatar>
             <AvatarFallback className="bg-note-ink text-white">M</AvatarFallback>
           </Avatar>

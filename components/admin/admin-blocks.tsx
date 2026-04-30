@@ -96,10 +96,6 @@ export function AdminSearchInput({
   );
 }
 
-export function SelectLike({ label, disabled = true }: { label: string; disabled?: boolean }) {
-  return <Button type="button" variant="outline" className="h-11 min-w-[128px] justify-between text-muted-foreground" disabled={disabled}>{label}</Button>;
-}
-
 export function SidePanel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <AdminCard>

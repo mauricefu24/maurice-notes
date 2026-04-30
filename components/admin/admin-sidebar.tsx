@@ -3,6 +3,8 @@ import { AdminLinkCard } from "@/components/admin/admin-blocks";
 import { sidebarNav } from "@/lib/admin-data";
 
 export function AdminSidebar() {
+  const year = new Date().getFullYear();
+
   return (
     <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-100 bg-white lg:flex lg:flex-col">
       <div className="border-b border-slate-100 px-7 py-6">
@@ -13,7 +15,7 @@ export function AdminSidebar() {
           <AdminLinkCard key={item.label} {...item} />
         ))}
       </nav>
-      <p className="px-4 pb-4 text-xs text-muted-foreground">© 2024 Maurice Notes. All rights reserved.</p>
+      <p className="px-4 pb-4 text-xs text-muted-foreground">© {year} Maurice Notes. All rights reserved.</p>
     </aside>
   );
 }

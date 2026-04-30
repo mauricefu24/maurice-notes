@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { AdminCard, AdminPageTitle, AdminStatCard, QuickActionRow, SidePanel } from "@/components/admin/admin-blocks";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCommentStatusLabel, getPostStatusLabel } from "@/lib/status-labels";
 import { getAllPosts, getBlogStats, getCategories, getComments } from "@/services/blog-service";
@@ -14,8 +13,8 @@ export default async function AdminDashboardPage() {
   const categories = await getCategories();
   const stats = await getBlogStats();
   const dashboardMetrics = [
-    { label: "总文章数", value: `${stats.totalPosts}`, delta: "实时数据", icon: FileText, tone: "bg-teal-50 text-teal-700" },
-    { label: "已发布", value: `${stats.publishedPosts}`, delta: "实时数据", icon: FileCheck2, tone: "bg-emerald-50 text-emerald-700" },
+    { label: "总文章数", value: `${stats.totalPosts}`, delta: "数据库同步", icon: FileText, tone: "bg-teal-50 text-teal-700" },
+    { label: "已发布", value: `${stats.publishedPosts}`, delta: "数据库同步", icon: FileCheck2, tone: "bg-emerald-50 text-emerald-700" },
     { label: "总浏览量", value: stats.totalViewsLabel, delta: "文章累计", icon: Eye, tone: "bg-blue-50 text-blue-700" },
     { label: "评论数", value: `${stats.totalComments}`, delta: `${stats.pendingComments} 待审核`, icon: MessageSquare, tone: "bg-orange-50 text-orange-700" },
   ];
@@ -50,7 +49,6 @@ export default async function AdminDashboardPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <AdminPageTitle title="内容运营总览" description="欢迎回来，Maurice！以下是网站的整体运营情况。" />
-        <Button variant="outline" disabled>实时数据</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -63,13 +61,12 @@ export default async function AdminDashboardPage() {
         <AdminCard>
           <CardHeader className="flex-row items-center justify-between p-5">
             <CardTitle className="text-lg tracking-normal">内容互动概览</CardTitle>
-            <Button variant="outline" size="sm" disabled>按最新文章</Button>
           </CardHeader>
           <CardContent className="p-5 pt-0">
             <div className="relative h-72 rounded-lg border border-slate-100 bg-gradient-to-b from-white to-slate-50 p-5">
               <div className="absolute left-5 top-5 flex gap-5 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-2"><i className="h-1.5 w-5 rounded-full bg-note-teal" />浏览量</span>
-                <span className="inline-flex items-center gap-2"><i className="h-1.5 w-5 rounded-full bg-blue-400" />访客数</span>
+                <span className="inline-flex items-center gap-2"><i className="h-1.5 w-5 rounded-full bg-blue-400" />评论数</span>
               </div>
               <div className="flex h-full items-end gap-6 pt-12">
                 {activityBars.map((item) => (

@@ -35,7 +35,19 @@ export function PublicHeader() {
             写文章
           </Link>
         </Button>
+        <Button asChild size="icon" className="ml-auto md:hidden" aria-label="写文章">
+          <Link href="/admin/posts/new">
+            <PenLine className="h-4 w-4" />
+          </Link>
+        </Button>
       </div>
+      <nav className="page-shell flex gap-5 overflow-x-auto border-t border-slate-100 py-3 text-sm font-medium text-slate-600 lg:hidden">
+        {navItems.map((item) => (
+          <Link key={item.href} href={item.href} className="shrink-0 transition hover:text-note-teal">
+            {item.label}
+          </Link>
+        ))}
+      </nav>
     </header>
   );
 }
